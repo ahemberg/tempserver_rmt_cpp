@@ -18,6 +18,9 @@
 
 //LIBCURL
 #include <curl/curl.h>
+#include <cctype>
+#include <iomanip>
+
 
 //JSON
 #include "json.hpp"
@@ -29,13 +32,6 @@
 //g++ -o <OUTPUT_FILE_NAME> <c++ file> -lcurl -lmysqlcppconn -std=c++11
 //g++ -o read_temp main.cpp -lcurl -lmysqlcppconn -std=c++11
 
-/*
- * TODO:
- * All functionality of python analogy
- * Get database parameter from external secrets file, no compiled passwords!
- * Move to separate classes
- *
- */
 
 using namespace std;
 using json = nlohmann::json;
@@ -57,6 +53,7 @@ struct remote_info {
     string server_address;
     string sensor_directory;
     string sensor_serial;
+    string board_serial;
     int remote_id;
 };
 
@@ -66,7 +63,7 @@ bool load_db_param(db_auth *params) {
     /* database login_info from config
      *
      */
-    ifstream i("secrets");
+    ifstream i("/home/alhe-remote/tempserver_remote/cpp/secrets"); // TODO Make this generic
 
     if (i) {
         try {
@@ -86,6 +83,25 @@ bool load_db_param(db_auth *params) {
         return false;
     }
    // return params;
+}
+
+json generate_server_message(remote_info rem_info, vector<saved_temp> temps_to_send) {
+    json temperatures, server_message;
+
+    for (unsigned int i = 0; i<temps_to_send.size(); i++) {
+        json j3;
+        j3.push_back(json::object_t::value_type("temp",temps_to_send[i].temp));
+        j3 += json::object_t::value_type("measurement_time",temps_to_send[i].timestamp);
+        j3 += json::object_t::value_type("id",temps_to_send[i].id);
+
+        temperatures.push_back(j3);
+    }
+
+    server_message["temperatures"] = temperatures;
+    server_message["remote_id"] = rem_info.remote_id;
+    server_message["remote_serial"] = rem_info.board_serial;
+
+    return server_message;
 }
 
 //CURL FUNCTIONS
@@ -124,6 +140,32 @@ string post_to_server(string server_address, string post) {
         return readBuffer;
     }
     return "";
+}
+
+string url_encode(const string &value) {
+    //Analogue to urllib.urlencode in python.
+    //taken from https://stackoverflow.com/questions/154536/encode-decode-urls-in-c
+
+    ostringstream escaped;
+    escaped.fill('0');
+    escaped << hex;
+
+    for (string::const_iterator i = value.begin(), n = value.end(); i != n; ++i) {
+        string::value_type c = (*i);
+
+        // Keep alphanumeric and other accepted characters intact
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            escaped << c;
+            continue;
+        }
+
+        // Any other characters are percent-encoded
+        escaped << uppercase;
+        escaped << '%' << setw(2) << int((unsigned char) c);
+        escaped << nouppercase;
+    }
+
+    return escaped.str();
 }
 
 //SQL FUNCTIONS
@@ -240,7 +282,60 @@ bool save_temp(double temperature, db_auth auth) {
     return true;
 }
 
-//SENSOR FUNCTIONS
+bool remove_temps(db_auth auth, vector<saved_temp> temps_to_remove) {
+
+    try {
+        sql::Driver *driver;
+        sql::Connection *con;
+        sql::PreparedStatement *prep_stmt;
+
+        driver = get_driver_instance();
+        con = driver->connect(auth.host, auth.user, auth.pwd);
+        con->setSchema(auth.database);
+
+        prep_stmt = con->prepareStatement("DELETE FROM saved_temp WHERE id = (?) AND measurement_time = (?)");
+
+        for (int i = 0; i < temps_to_remove.size(); i++) {
+            prep_stmt->setInt(1,temps_to_remove[i].id);
+            prep_stmt->setString(2,temps_to_remove[i].timestamp);
+            prep_stmt->execute();
+        }
+
+        delete(prep_stmt);
+        delete(con);
+
+    } catch (sql::SQLException &e) {
+        cout << "# ERR: SQLException in " << __FILE__;
+        cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
+        cout << "# ERR: " << e.what();
+        cout << " (MySQL error code: " << e.getErrorCode();
+        cout << ", SQLState: " << e.getSQLState() << " )" << endl;
+        return false;
+    }
+    return true;
+
+}
+
+//SENSOR AND BOARD FUNCTIONS
+
+string get_rpi_serial() {
+
+    ifstream i("/proc/cpuinfo");
+    string line;
+    string serial;
+
+    if (!i) {
+        return "0000000000000000";
+    }
+
+    while (getline(i, line)) {
+        if (line.find("Serial") != string::npos) {
+            serial = line.substr(line.length()- 16);
+            return serial;
+        }
+    }
+    return "00000000000000";
+}
 
 string get_sensor_serial() {
     /*
@@ -275,6 +370,7 @@ string get_sensor_serial() {
     }
     return sensor;
 }
+
 
 double read_temp(string sensor_sn_str) {
     char path[] = SENSOR_PATH;
@@ -314,22 +410,22 @@ int main() {
     vector<saved_temp> temps_saved_on_server;
     remote_info remote;
     db_auth sql_auth;
+    string server_response_raw;
+    json server_message_json;
+    string urlencode_post;
 
     //Read database authentication info
     if (!load_db_param(&sql_auth)) {
         return EXIT_FAILURE;
     };
 
-    cout << sql_auth.host << endl;
-    cout << sql_auth.database << endl;
-    cout << sql_auth.user << endl;
-    cout << sql_auth.pwd << endl;
-
     //Get locally stored remote info
     cout << "Reading remote info from database..." << endl;
     remote = get_remote_info(sql_auth);
+    remote.board_serial = get_rpi_serial();
 
     cout << "Remote id: " << remote.remote_id << endl;
+    cout << "Remote serial: " << remote.board_serial << endl;
     cout << "Sensor directory: " << remote.sensor_directory << endl;
     cout << "Sensor serial: " << remote.sensor_serial << endl;
     cout << "Server address: " << remote.server_address << endl;
@@ -360,44 +456,58 @@ int main() {
     cout << "Temp saved to local storage. Getting locally stored measurements.." << endl;
 
     saved_temps = get_saved_temperatures(sql_auth);
-    cout << "The following measurements are stored locally.." << endl;
 
     for (unsigned int i = 0; i<saved_temps.size(); i++) {
         cout << saved_temps[i].id << " " << saved_temps[i].timestamp << " " << saved_temps[i].temp << endl;
     }
-    cout << "Posting temperatures to server..." << endl;
+
+    // Create json object
+    cout << "Parsing local temps to json" << endl;
+
+    server_message_json = generate_server_message(remote, saved_temps);
+    urlencode_post = "data=" + url_encode(server_message_json.dump());
+
+    cout << server_message_json.dump(1) << endl;
 
     //Send to server
-    //TEST CODE
+    cout << "Sending to server..." << endl;
 
-    cout << "testing json parse" << endl;
+    server_response_raw = post_to_server("https://alehem.eu/api/save_temp", urlencode_post);
 
-    string json_string;
+    cout << "raw response" << endl;
+    cout << server_response_raw << endl;
 
-    json_string = post_to_server("https://alehem.eu/api/get_averages", "");
-    cout << json_string << endl;
-    auto j = json::parse(json_string);
+    cout << "Server response:" << endl;
+    //TODO ERROR HANDLING FOR THIS STRING
+    auto server_response = json::parse(server_response_raw);
 
-    cout << j.size() << endl;
+    cout << server_response.dump(1) << endl;
 
-    for (int i = 0; i < j.size(); i++) {
-        cout << "Remote: " << j[i]["remote"] << " Avg temp: " << j[i]["avg_temp"] << endl;
+    if (server_response["status"] == 1) {
+        cout << "Server successfully saved temperatures." << endl;
+        cout << "Server message: " << server_response["msg"] << endl;
+
+        saved_temp t;
+        for (auto& element : server_response["saved_data"]) {
+            t.timestamp = element["measurement_time"];
+            t.id = element["id"];
+            t.temp = element["temp"];
+            temps_saved_on_server.push_back(t);
+        }
+
+        cout << "Removing data saved on server from local storage.." << endl;
+
+        if (remove_temps(sql_auth, temps_saved_on_server)) {
+            cout << "Local data removed" << endl;
+            return EXIT_SUCCESS;
+        }
+    } else {
+        cout << "Server failed to save temperatures" << endl;
+        cout << "Server message: " << server_response["msg"] << endl;
+        cout << "Local storage has been kept." << endl;
+        return EXIT_FAILURE;
     }
 
-    cout << "parsing local temps to json" << endl;
-
-    json j2;
-
-    for (unsigned int i = 0; i<saved_temps.size(); i++) {
-        j2.push_back(json::object_t::value_type("temp",saved_temps[i].temp));
-        j2 += json::object_t::value_type("measurement_time",saved_temps[i].timestamp);
-        j2 += json::object_t::value_type("id",saved_temps[i].id);
-    }
-
-    //json j_vec(saved_temps);
-
-    cout << j2.dump(2) << endl;
-
-
-    return EXIT_SUCCESS;
+    return EXIT_FAILURE;
 }
+
