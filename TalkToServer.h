@@ -16,17 +16,21 @@
 class TalkToServer {
 private:
     static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
+    void generate_server_message();
 public:
     nlohmann::json server_message;
     std::string raw_server_response = "";
+    std::string encoded_post;
     int server_response_code;
     std::string server_response_msg;
+    temperature_vector local_temps;
     temperature_vector temps_saved_on_server;
+    remote_info remote_data;
 
-    void generate_server_message(remote_info rem_info, temperature_vector temps_to_send);
     bool post_to_server(std::string server_address, std::string post);
-    std::string url_encode(const std::string &value);
+    void url_encode(const std::string &value);
     void parse_server_response();
+    TalkToServer(remote_info rem_info, temperature_vector temps_to_send);
 };
 
 

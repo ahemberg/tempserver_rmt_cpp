@@ -282,18 +282,22 @@ int main() {
     // Create json object
     cout << "Parsing local temps to json" << endl;
 
-    TalkToServer server_session;
+    TalkToServer server_session(remote, saved_temps);
 
-    server_session.generate_server_message(remote, saved_temps);
+    //server_session.generate_server_message(remote, saved_temps);
 
-    urlencode_post = "data=" + server_session.url_encode(server_session.server_message.dump());
+    //urlencode_post = "data=" + server_session.url_encode(server_session.server_message.dump());
+    //server_session.url_encode(server_session.server_message);
 
     cout << server_session.server_message.dump(1) << endl;
+
+    cout << "encoded message:" << endl;
+    cout << server_session.encoded_post << endl;
 
     //Send to server
     cout << "Sending to server..." << endl;
 
-    server_session.post_to_server("https://alehem.eu/api/save_temp", urlencode_post);
+    server_session.post_to_server("https://alehem.eu/api/save_temp", server_session.encoded_post);
 
     cout << "raw response" << endl;
     cout << server_session.raw_server_response << endl;
@@ -303,32 +307,20 @@ int main() {
     server_session.parse_server_response();
 
     //TODO ERROR HANDLING FOR THIS STRING
-    auto server_response = json::parse(server_session.raw_server_response);
 
-    cout << server_response.dump(1) << endl;
-
-    if (server_response["status"] == 1) {
+    if (server_session.server_response_code == 1) {
         cout << "Server successfully saved temperatures." << endl;
-        cout << "Server message: " << server_response["message"] << endl;
-
-
-        saved_temp t;
-        for (auto& element : server_response["saved_data"]) {
-            t.timestamp = element["measurement_time"];
-            t.id = element["id"];
-            t.temp = element["temp"];
-            temps_saved_on_server.push_back(t);
-        }
+        cout << "Server message: " << server_session.server_response_msg << endl;
 
         cout << "Removing data saved on server from local storage.." << endl;
 
-        if (remove_temps(sql_auth, temps_saved_on_server)) {
+        if (remove_temps(sql_auth, server_session.temps_saved_on_server)) {
             cout << "Local data removed" << endl;
             return EXIT_SUCCESS;
         }
     } else {
         cout << "Server failed to save temperatures" << endl;
-        cout << "Server message: " << server_response["message"] << endl;
+        cout << "Server message: " << server_session.server_message << endl;
         cout << "Local storage has been kept." << endl;
         return EXIT_FAILURE;
     }

@@ -10,21 +10,21 @@ size_t TalkToServer::WriteCallback(void *contents, size_t size, size_t nmemb, vo
     return size * nmemb;
 }
 
-void TalkToServer::generate_server_message(remote_info rem_info, temperature_vector temps_to_send) {
+void TalkToServer::generate_server_message() {
     nlohmann::json temperatures;
 
-    for (unsigned int i = 0; i<temps_to_send.size(); i++) {
+    for (unsigned int i = 0; i<local_temps.size(); i++) {
         nlohmann::json j3;
-        j3.push_back(nlohmann::json::object_t::value_type("temp",temps_to_send[i].temp));
-        j3 += nlohmann::json::object_t::value_type("measurement_time",temps_to_send[i].timestamp);
-        j3 += nlohmann::json::object_t::value_type("id",temps_to_send[i].id);
+        j3.push_back(nlohmann::json::object_t::value_type("temp",local_temps[i].temp));
+        j3 += nlohmann::json::object_t::value_type("measurement_time",local_temps[i].timestamp);
+        j3 += nlohmann::json::object_t::value_type("id",local_temps[i].id);
 
         temperatures.push_back(j3);
     }
 
     server_message["temperatures"] = temperatures;
-    server_message["remote_id"] = rem_info.remote_id;
-    server_message["remote_serial"] = rem_info.board_serial;
+    server_message["remote_id"] = remote_data.remote_id;
+    server_message["remote_serial"] = remote_data.board_serial;
 }
 
 bool TalkToServer::post_to_server(std::string server_address, std::string post) {
@@ -58,7 +58,7 @@ bool TalkToServer::post_to_server(std::string server_address, std::string post) 
     return false;
 }
 
-std::string TalkToServer::url_encode(const std::string &value) {
+void TalkToServer::url_encode(const std::string &value) {
     //Analogue to urllib.urlencode in python.
     //taken from https://stackoverflow.com/questions/154536/encode-decode-urls-in-c
 
@@ -81,7 +81,7 @@ std::string TalkToServer::url_encode(const std::string &value) {
         escaped << std::nouppercase;
     }
 
-    return escaped.str();
+    encoded_post = "data=" + escaped.str();
 }
 
 void TalkToServer::parse_server_response() {
@@ -90,8 +90,9 @@ void TalkToServer::parse_server_response() {
     std::cout << "server des" << std::endl;
     std::cout << raw_server_response << std::endl;
     auto server_response = nlohmann::json::parse(raw_server_response);
+
     server_response_code = server_response["status"];
-    server_response_msg = server_response["message"];
+    server_response_msg = server_response["msg"];
 
     saved_temp t;
     for (auto& element : server_response["saved_data"]) {
@@ -100,5 +101,17 @@ void TalkToServer::parse_server_response() {
         t.temp = element["temp"];
         temps_saved_on_server.push_back(t);
     }
+}
+
+TalkToServer::TalkToServer(remote_info rem_info, temperature_vector temps_to_send){
+    local_temps = temps_to_send;
+    remote_data = rem_info;
+
+    //Set server message
+    generate_server_message();
+
+    //Encode server message
+    url_encode(server_message.dump());
+
 
 }
