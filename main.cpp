@@ -24,7 +24,6 @@ static void show_usage(std::string name)
               << "\t-l,\t\tKeep measurement in local db but do not send to server\n"
               << "\t-s,\t\tDo not measure the current temperature, only send old measurements\n"
               << "\t-m,\t\tOnly measure temperature, do not save or send. Temp is printed to stdout\n"
-              << "\t-n,\t\tMeasure temp and send to server. Do not save local temp\n"
               << std::endl;
 }
 
@@ -118,9 +117,6 @@ int main(int argc, char* argv[]) {
                 send_to_server = false;
                 save_local = false;
                 break;
-            case 'n':
-                save_local = false;
-                break;
             default:
                 show_usage(argv[0]);
                 return EXIT_FAILURE;
@@ -163,7 +159,6 @@ int main(int argc, char* argv[]) {
     }
 
     if (!send_to_server) {
-        cout << "temperature saved to local storage, exiting" << endl;
         //Exit if -l flag was used
         return EXIT_SUCCESS;
     }
@@ -188,7 +183,6 @@ int main(int argc, char* argv[]) {
     if (server_session.server_response_code == 1) {
         cout << "Server successfully saved temperatures." << endl;
         cout << "Server message: " << server_session.server_response_msg << endl;
-
         cout << "Removing data saved on server from local storage.." << endl;
 
         if (remove_temps(sql_auth, server_session.temps_saved_on_server)) {
