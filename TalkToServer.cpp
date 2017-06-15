@@ -4,6 +4,17 @@
 
 #include "TalkToServer.h"
 
+TalkToServer::TalkToServer(remote_info rem_info, temperature_vector temps_to_send){
+    local_temps = temps_to_send;
+    remote_data = rem_info;
+
+    //Set server message
+    generate_server_message();
+
+    //Encode server message
+    url_encode(server_message.dump());
+}
+
 size_t TalkToServer::WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
     ((std::string*)userp)->append((char*)contents, size * nmemb);
@@ -27,10 +38,14 @@ void TalkToServer::generate_server_message() {
     server_message["remote_serial"] = remote_data.board_serial;
 }
 
-bool TalkToServer::post_to_server(std::string server_address, std::string post) {
+bool TalkToServer::post_to_server(std::string post, std::string server_address) {
     CURL *curl;
     CURLcode res;
     //std::string readBuffer;
+
+    if (server_address == "") {
+        server_address = remote_data.server_address + "/api/save_temp";
+    }
 
     static const char *srv = server_address.c_str();
     static const char *postthis= post.c_str();
@@ -85,10 +100,7 @@ void TalkToServer::url_encode(const std::string &value) {
 }
 
 void TalkToServer::parse_server_response() {
-    //TODO: You were here. This does not work gives error:
-    //Cannot parse JSON.
-    std::cout << "server des" << std::endl;
-    std::cout << raw_server_response << std::endl;
+
     auto server_response = nlohmann::json::parse(raw_server_response);
 
     server_response_code = server_response["status"];
@@ -103,15 +115,4 @@ void TalkToServer::parse_server_response() {
     }
 }
 
-TalkToServer::TalkToServer(remote_info rem_info, temperature_vector temps_to_send){
-    local_temps = temps_to_send;
-    remote_data = rem_info;
 
-    //Set server message
-    generate_server_message();
-
-    //Encode server message
-    url_encode(server_message.dump());
-
-
-}
