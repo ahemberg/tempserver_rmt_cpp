@@ -4,11 +4,11 @@
 
 #include "OneWireSensor.h"
 
-void OneWireSensor::get_sensor_serial() {
+void OneWireSensor::get_sensor_serial(std::string sensor_path) {
     /*
      * Reads out the sensor serial from the device list Might cause issues if there are multiple sensors.
      */
-    char path[] = SENSOR_PATH;
+    const char *path = sensor_path.c_str();
 
     sensor_serial = "";
 
@@ -32,9 +32,9 @@ void OneWireSensor::get_sensor_serial() {
     }
 }
 
-void OneWireSensor::read_temp(std::string sensor_sn_str) {
+void OneWireSensor::read_temp(std::string sensor_path_str, std::string sensor_sn_str) {
 
-    char path[] = SENSOR_PATH;
+    const char *path = sensor_path_str.c_str();
     char sensor_path[128];
     char buf[256];
     char tmpData[6];
