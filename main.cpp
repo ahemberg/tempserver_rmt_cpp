@@ -8,8 +8,25 @@
 //Database Functions
 #include "dbFunctions.h"
 
+//Option parsing (move to pch later)
+#include "unistd.h"
+
 using namespace std;
 using json = nlohmann::json;
+
+static void show_usage(std::string name)
+{
+    //TODO: Implement long options too
+    //TODO: Very weird behaviour when several of these options are set. Handle that!
+    std::cerr << "Usage: " << name << " <option(s)> SOURCES\n"
+              << "Options:"
+              << "-h,\t\tShow this help message\n"
+              << "\t-l,\t\tKeep measurement in local db but do not send to server\n"
+              << "\t-s,\t\tDo not measure the current temperature, only send old measurements\n"
+              << "\t-m,\t\tOnly measure temperature, do not save or send. Temp is printed to stdout\n"
+              << "\t-n,\t\tMeasure temp and send to server. Do not save local temp\n"
+              << std::endl;
+}
 
 //JSON FUNCTIONS
 
@@ -72,13 +89,45 @@ string get_rpi_serial() {
     return "00000000000000";
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+
+    int opt;
+    bool send_to_server = true,
+         measure_temp = true,
+         save_local = true;
     string sensor_serial, server_response_raw, urlencode_post;
     temperature_vector saved_temps, temps_saved_on_server;
     json server_message_json;
     remote_info remote;
     db_auth sql_auth;
     OneWireSensor temp_sensor;
+
+    // Parse command line options
+    while ((opt = getopt(argc, argv, "hlsmn")) != -1) {
+        switch (opt) {
+            case 'h':
+                show_usage(argv[0]);
+                return EXIT_SUCCESS;
+            case 'l':
+                send_to_server = false;
+                break;
+            case 's':
+                measure_temp = false;
+                break;
+            case 'm':
+                send_to_server = false;
+                save_local = false;
+                break;
+            case 'n':
+                save_local = false;
+                break;
+            default:
+                show_usage(argv[0]);
+                return EXIT_FAILURE;
+        }
+    }
+
+
 
     //Read database authentication info
     if (!load_db_param(&sql_auth)) {
@@ -94,20 +143,32 @@ int main() {
     }
     remote.board_serial = get_rpi_serial();
 
-    cout << "Reading sensor..." << endl;
-    temp_sensor.read_temp(remote.sensor_directory, remote.sensor_serial);
-    if (temp_sensor.sensor_temp == 999) {
-        perror("Unable to read temperature, Exiting.");
-        return EXIT_FAILURE;
-    }
-    cout << "Sensor read! Temperature is " << temp_sensor.sensor_temp << "C" << endl;
+    if (measure_temp) {
+        cout << "Reading sensor..." << endl;
+        temp_sensor.read_temp(remote.sensor_directory, remote.sensor_serial);
+        if (temp_sensor.sensor_temp == 999) {
+            perror("Unable to read temperature, Exiting.");
+            return EXIT_FAILURE;
+        }
+        cout << "Sensor read! Temperature is " << temp_sensor.sensor_temp << "C" << endl;
 
-    cout << "Saving temp to local storage..." << endl;
-    if (!save_temp(temp_sensor.sensor_temp, &sql_auth)) {
-        perror("Unable to store to local database. Aborting");
-        return EXIT_FAILURE;
+        if (save_local) {
+            cout << "Saving temp to local storage..." << endl;
+            if (!save_temp(temp_sensor.sensor_temp, &sql_auth)) {
+                perror("Unable to store to local database. Aborting");
+                return EXIT_FAILURE;
+            }
+            cout << "Temp saved to local storage." << endl;
+        }
     }
-    cout << "Temp saved to local storage. Getting locally stored measurements.." << endl;
+
+    if (!send_to_server) {
+        cout << "temperature saved to local storage, exiting" << endl;
+        //Exit if -l flag was used
+        return EXIT_SUCCESS;
+    }
+
+    cout << "Getting locally stored measurements.."  << endl;
 
     saved_temps = get_saved_temperatures(&sql_auth);
 
@@ -142,6 +203,5 @@ int main() {
     }
     return EXIT_FAILURE;
 }
-
 
 #pragma clang diagnostic pop
