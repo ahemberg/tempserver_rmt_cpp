@@ -24,6 +24,8 @@ static void show_usage(std::string name)
               << "\t-l,\t\tKeep measurement in local db but do not send to server\n"
               << "\t-s,\t\tDo not measure the current temperature, only send old measurements\n"
               << "\t-m,\t\tOnly measure temperature, do not save or send. Temp is printed to stdout\n"
+              << "\t-v,\t\tVerbose to stdout\n"
+              << "\t-q,\t\tQuiet, prints nothing to stdout unless -m flag is used\n"
               << std::endl;
 }
 
@@ -166,6 +168,11 @@ int main(int argc, char* argv[]) {
     cout << "Getting locally stored measurements.."  << endl;
 
     saved_temps = get_saved_temperatures(&sql_auth);
+
+    if (saved_temps.size() == 0) {
+        cout << "Nothing to send, exiting" << endl;
+        return EXIT_SUCCESS;
+    }
 
     //Send to server
     TalkToServer server_session(remote, saved_temps);
