@@ -1,18 +1,37 @@
-#include "pch.h"
-
+#include "lib/pch.h"
 //Sensor read
-#include "OneWireSensor.h"
+#include "lib/OneWireSensor.h"
 //Server Comm
-#include "TalkToServer.h"
-
+#include "lib/TalkToServer.h"
 //Database Functions
-#include "dbFunctions.h"
+#include "lib/dbFunctions.h"
 
 //Command Line parsing
-#include "cl_parser.h"
+#include "lib/cl_parser.h"
+
+#include "lib/messages_eng.h"
 
 using namespace std;
 using json = nlohmann::json;
+
+std::string sql_timestamp() {
+    /*
+     * Returns the current system timestamp in SQL Format as:
+     * YYYY-MM-DD HH:MM:SS
+     */
+
+    time_t rawtime;
+    struct tm * timeinfo;
+    char buffer[80];
+
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
+    std::string str(buffer);
+
+    return str;
+}
 
 //JSON FUNCTIONS
 
@@ -82,6 +101,7 @@ int main(int argc, char* argv[]) {
     db_auth sql_auth;
     OneWireSensor temp_sensor;
     cl_opt cl;
+    output_messages msg;
 
     // Parse command line options
     if (!parse_cl_opt(argc, argv, &cl)) {
@@ -91,35 +111,35 @@ int main(int argc, char* argv[]) {
     //Read database authentication info
     if (!load_db_param(&sql_auth)) {
         return EXIT_FAILURE;
-    };
+    }
 
     //Get locally stored remote info
-    if (cl.verbose) cout << "Reading remote info from database..." << endl;
+    if (cl.verbose) cout << msg.reading_rem_info << endl;
 
     if (!get_remote_info(&sql_auth, &remote)) {
-        perror("Failed to get remote info from database");
+        cerr << msg.error_reading_rem_info << endl;
         return EXIT_FAILURE;
     }
     remote.board_serial = get_rpi_serial();
 
     if (cl.measure_temp) {
-        if (cl.verbose) cout << "Reading sensor..." << endl;
+        if (cl.verbose) cout << msg.reading_sensor << endl;
         temp_sensor.read_temp(remote.sensor_directory, remote.sensor_serial);
         if (temp_sensor.sensor_temp == 999) {
-            perror("Unable to read temperature, Exiting.");
+            cerr << msg.error_reading_temp << endl;
             return EXIT_FAILURE;
         }
 
-        if (cl.verbose) cout << "Sensor read! Temperature is ";
+        if (cl.verbose) cout << msg.sensor_read;
         if (cl.print) cout << temp_sensor.sensor_temp << " \370C" << endl;
 
         if (cl.save_local) {
-            if (cl.verbose) cout << "Saving temp to local storage..." << endl;
+            if (cl.verbose) cout << msg.saving_to_local << endl;
             if (!save_temp(temp_sensor.sensor_temp, &sql_auth)) {
-                perror("Unable to store to local database. Aborting");
+                cerr << msg.error_storing_local << endl;
                 return EXIT_FAILURE;
             }
-            if (cl.verbose) cout << "Temp saved to local storage." << endl;
+            if (cl.verbose) cout << msg.temp_saved_local << endl;
         }
     }
 
@@ -128,32 +148,36 @@ int main(int argc, char* argv[]) {
         return EXIT_SUCCESS;
     }
 
-    if (cl.verbose) cout << "Getting locally stored measurements.."  << endl;
-
     if (!cl.save_local && cl.measure_temp) {
         //Only send last temp
-        // TODO: HERE. Must implement this
-        /*saved_temps.push_back(0);
-        saved_temps[0].temp = temp_sensor.sensor_temp;
-        saved_temps[0].timestamp = "<GET TIMESTAMP>";
-        saved_temps[0].id = 0;*/
-        cout << "This option is not implemented" << endl;
+        saved_temp local_meas;
+        local_meas.temp = temp_sensor.sensor_temp;
+        local_meas.timestamp = sql_timestamp();
+        local_meas.id = 0;
+        saved_temps.push_back(local_meas);
     } else {
+        if (cl.verbose) cout << msg.getting_local_stored << endl;
         saved_temps = get_saved_temperatures(&sql_auth);
     }
 
-
     if (saved_temps.size() == 0) {
-        if (cl.print) cout << "Nothing to send, exiting" << endl;
+        if (cl.print) cout << msg.no_send_exit << endl;
         return EXIT_SUCCESS;
+    }
+
+    if (cl.verbose) {
+        cout << msg.data_to_send << endl;
+        for (temperature_vector::iterator it = saved_temps.begin(); it != saved_temps.end(); it++) {
+            cout << "ID: " << it->id << " TEMP: " << it->temp << " TIME: " << it->timestamp << endl;
+        }
     }
 
     //Send to server
     TalkToServer server_session(remote, saved_temps);
-    if (cl.verbose) cout << "Sending to server..." << endl;
+    if (cl.verbose) cout << msg.sending << endl;
 
     if (!server_session.post_to_server(server_session.encoded_post)) {
-        perror("Failed to contact server. Local storage has been kept.");
+        cerr << msg.error_failed_server_contact << endl;
         return EXIT_FAILURE;
     };
     server_session.parse_server_response();
@@ -161,21 +185,22 @@ int main(int argc, char* argv[]) {
     //TODO ERROR HANDLING FOR THIS STRING ??
 
     if (server_session.server_response_code == 1) {
-        if (cl.print) cout << "Server successfully saved temperatures." << endl;
-        if (cl.verbose) cout << "Server message: " << server_session.server_response_msg << endl;
-        if (cl.verbose) cout << "Removing data saved on server from local storage.." << endl;
+        if (cl.print) cout << msg.server_save_ok << endl;
+        if (cl.verbose) cout << msg.server_msg << server_session.server_response_msg << endl;
 
-        if (remove_temps(sql_auth, server_session.temps_saved_on_server)) {
-            if (cl.verbose) cout << "Local data removed" << endl;
-            return EXIT_SUCCESS;
+        if (cl.save_local) {
+            //Option remote was used. Do not look in db.
+            if (cl.verbose) cout << msg.removing_local << endl;
+            if (remove_temps(sql_auth, server_session.temps_saved_on_server)) {
+                if (cl.verbose) cout << msg.removed << endl;
+                return EXIT_SUCCESS;
+            }
         }
     } else {
-        if (cl.print) cout << "Server failed to save temperatures" << endl;
-        if (cl.verbose) cout << "Server message: " << server_session.server_message << endl;
-        if (cl.verbose) cout << "Local storage has been kept." << endl;
+        if (cl.print) cout << msg.error_failed_server_save << endl;
+        if (cl.verbose) cout << msg.server_msg << server_session.server_message << endl;
+        if (cl.verbose) cout << msg.local_storage_kept << endl;
         return EXIT_FAILURE;
     }
     return EXIT_FAILURE;
 }
-
-#pragma clang diagnostic pop
