@@ -13,8 +13,6 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <iostream>
-#include <fstream>
-#include <unistd.h>
 #include <fcntl.h>
 
 
