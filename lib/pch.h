@@ -3,7 +3,7 @@
 //
 
 /*
- * PreCompiledHeader - Used to speed up compile time
+ * PreCompiledHeader for main.cpp - Used to speed up compile time
  */
 
 #ifndef TEMPSERVER_RMT_CPP_PCH_H
