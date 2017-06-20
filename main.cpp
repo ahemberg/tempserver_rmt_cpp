@@ -14,25 +14,6 @@
 using namespace std;
 using json = nlohmann::json;
 
-std::string sql_timestamp() {
-    /*
-     * Returns the current system timestamp in SQL Format as:
-     * YYYY-MM-DD HH:MM:SS
-     */
-
-    time_t rawtime;
-    struct tm * timeinfo;
-    char buffer[80];
-
-    time(&rawtime);
-    timeinfo = localtime(&rawtime);
-
-    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
-    std::string str(buffer);
-
-    return str;
-}
-
 //JSON FUNCTIONS
 
 bool load_db_param(db_auth *params) {
