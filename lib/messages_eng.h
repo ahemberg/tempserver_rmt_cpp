@@ -30,7 +30,8 @@ struct output_messages {
                       error_reading_temp =          "Unable to read temperature, Exiting.",
                       error_storing_local =         "Unable to store to local database. Aborting",
                       error_failed_server_contact = "Failed to contact server. Local storage has been kept.",
-                      error_failed_server_save =    "Server failed to save temperatures";
+                      error_failed_server_save =    "Server failed to save temperatures",
+                      error_reading_board_serial =  "Failed to get rpi serial. Server will reject save!";
 };
 
 #endif //TEMPSERVER_RMT_CPP_MESSAGES_ENG_H
