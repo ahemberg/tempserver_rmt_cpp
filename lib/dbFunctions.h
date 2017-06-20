@@ -7,13 +7,14 @@
 #ifndef TEMPSERVER_RMT_CPP_DBFUNCTIONS_H
 #define TEMPSERVER_RMT_CPP_DBFUNCTIONS_H
 
+#include "json.hpp"
+
 //Dependencies
+#include <fstream>
 #include <iostream>
 #include <string.h>
 #include <vector>
 #include <time.h>
-#include "json.hpp"
-
 
 //MySQL Includes
 #include <cppconn/driver.h>
@@ -27,7 +28,7 @@
 //Misc
 #include "structs.h"
 
-bool load_db_param(db_auth *arams);
+bool load_db_param(db_auth *params);
 std::string sql_timestamp();
 bool get_remote_info(db_auth *auth, remote_info *rem);
 std::vector<saved_temp> get_saved_temperatures(db_auth *auth);

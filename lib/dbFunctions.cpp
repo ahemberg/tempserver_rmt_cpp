@@ -13,19 +13,14 @@ bool load_db_param(db_auth *params) {
      *
      */
 
-    const char * homeDir = getenv("HOME");
-    const char * filePath = "/tempserver_remote/cpp/secrets";
+    std::string homeDir = getenv("HOME");
+    std::string filePath = "/tempserver_remote/cpp/secrets";
+    nlohmann::json j;
 
-    char path[100];
-
-    strcpy(path, homeDir);
-    strcat(path, filePath);
-
-    std::ifstream i(path);
+    std::ifstream i(homeDir+filePath, std::ios::in);
 
     if (i) {
         try {
-            nlohmann::json j;
             i >> j;
             params->host = j["database_auth"]["host"];
             params->database = j["database_auth"]["database"];
