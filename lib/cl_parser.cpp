@@ -4,7 +4,7 @@
 
 #include "cl_parser.h"
 
-static void show_usage(std::string name) {
+void show_usage(std::string name) {
     //TODO: Implement long options too
     std::cerr << "Usage: " << name << " <option(s)>\n"
               << "Options:\n"

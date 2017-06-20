@@ -17,7 +17,7 @@ struct cl_opt {
             verbose = false;
 };
 
-static void show_usage(std::string name);
+void show_usage(std::string name);
 bool parse_cl_opt(int c, char *v[], cl_opt* options);
 
 #endif //TEMPSERVER_RMT_CPP_CL_PARSER_H
