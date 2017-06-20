@@ -21,6 +21,8 @@ OneWireSensor.o: lib/OneWireSensor.cpp
 TalkToServer.o: lib/TalkToServer.cpp
 	g++ -c $(CSTD) lib/TalkToServer.cpp
 
-clean:
-	rm *o read_temp
+Precompile: lib/pch.h lib/TalkToServer.h lib/OneWireSensor.h lib/cl_parser.h lib/dbFunctions.h
+	g++ -std=c++11 lib/pch.h lib/TalkToServer.h lib/OneWireSensor.h lib/cl_parser.h lib/dbFunctions.h
 
+clean:
+	rm *.o read_temp
