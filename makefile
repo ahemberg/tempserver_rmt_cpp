@@ -25,4 +25,4 @@ Precompile: lib/pch.h lib/TalkToServer.h lib/OneWireSensor.h lib/cl_parser.h lib
 	g++ -std=c++11 lib/pch.h lib/TalkToServer.h lib/OneWireSensor.h lib/cl_parser.h lib/dbFunctions.h
 
 clean:
-	rm *.o read_temp
+	rm *.o
