@@ -5,6 +5,8 @@
 #ifndef TEMPSERVER_RMT_CPP_MESSAGES_ENG_H
 #define TEMPSERVER_RMT_CPP_MESSAGES_ENG_H
 
+#include <string>
+
 struct output_messages {
 
     //INFO
