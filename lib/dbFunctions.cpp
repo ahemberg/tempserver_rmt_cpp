@@ -4,6 +4,25 @@
 
 #include "dbFunctions.h"
 
+std::string sql_timestamp() {
+    /*
+     * Returns the current system timestamp in SQL Format as:
+     * YYYY-MM-DD HH:MM:SS
+     */
+
+    time_t rawtime;
+    struct tm * timeinfo;
+    char buffer[80];
+
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
+    std::string str(buffer);
+
+    return str;
+}
+
 bool get_remote_info(db_auth *auth, remote_info *rem) {
     /*
      * Gets remote information from the local remote database. Uses db_auth struct to

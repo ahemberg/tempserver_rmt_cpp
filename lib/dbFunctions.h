@@ -9,11 +9,13 @@
 
 //Dependencies
 #include <iostream>
+#include <string.h>
 #include <vector>
+#include <time.h>
+
+
 
 //MySQL Includes
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "CannotResolve"
 #include <cppconn/driver.h>
 #include "mysql_connection.h"
 #include "mysql_driver.h"
@@ -25,6 +27,7 @@
 //Misc
 #include "structs.h"
 
+std::string sql_timestamp();
 bool get_remote_info(db_auth *auth, remote_info *rem);
 std::vector<saved_temp> get_saved_temperatures(db_auth *auth);
 bool save_temp(double temperature, db_auth *auth);
