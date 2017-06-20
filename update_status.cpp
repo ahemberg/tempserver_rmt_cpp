@@ -25,7 +25,7 @@ int main() {
 
     //Get memory Usage
 
-    //Get GPU onboard temps
+    //Get GPU temps
     cout << serial << " " << cpu_temp << endl;
     //Get available disk-space
     return EXIT_SUCCESS;
