@@ -2,11 +2,11 @@
 // Created by A547832 on 2017-06-05.
 //
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "CannotResolve"
+
 #ifndef TEMPSERVER_RMT_CPP_TALKTOSERVER_H
 #define TEMPSERVER_RMT_CPP_TALKTOSERVER_H
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <curl/curl.h>
@@ -35,4 +35,3 @@ public:
 };
 
 #endif //TEMPSERVER_RMT_CPP_TALKTOSERVER_H
-#pragma clang diagnostic pop
