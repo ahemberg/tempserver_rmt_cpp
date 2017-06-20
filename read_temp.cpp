@@ -47,7 +47,10 @@ int main(int argc, char* argv[]) {
         cerr << msg.error_reading_rem_info << endl;
         return EXIT_FAILURE;
     }
-    remote.board_serial = get_rpi_serial();
+
+    if (!get_rpi_serial(&remote.board_serial)) {
+        cerr << msg.error_reading_board_serial << endl;
+    }
 
     if (cl.measure_temp) {
         if (cl.verbose) cout << msg.reading_sensor << endl;
