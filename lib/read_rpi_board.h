@@ -8,7 +8,9 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <stdexcept>
 
-std::string get_rpi_serial();
+bool get_rpi_serial(std::string *s_no, bool set_null_if_fail = true);
+bool get_cpu_temp(double *temp, bool set_neg_if_fail = true);
 
 #endif //TEMPSERVER_RMT_CPP_READ_RPI_BOARD_H
