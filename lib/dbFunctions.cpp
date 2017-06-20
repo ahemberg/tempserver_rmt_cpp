@@ -4,6 +4,44 @@
 
 #include "dbFunctions.h"
 
+bool load_db_param(db_auth *params) {
+    /*
+     * Loads database authentication info from local secrets file. Params should point to a
+     * db_auth struct. Secrets file has to be located in $HOME/tempserver_remote/cpp/
+     *
+     * Returns true if file was loaded properly, false otherwise.
+     *
+     */
+
+    const char * homeDir = getenv("HOME");
+    const char * filePath = "/tempserver_remote/cpp/secrets";
+
+    char path[100];
+
+    strcpy(path, homeDir);
+    strcat(path, filePath);
+
+    std::ifstream i(path);
+
+    if (i) {
+        try {
+            nlohmann::json j;
+            i >> j;
+            params->host = j["database_auth"]["host"];
+            params->database = j["database_auth"]["database"];
+            params->user = j["database_auth"]["user"];
+            params->pwd = j["database_auth"]["password"];
+        } catch (std::domain_error &e) {
+            std::cout << "Bad format in secrets file!" << std::endl;
+            return false;
+        }
+        return true;
+    } else {
+        std::cout << "Failed to load secrets file!" << std::endl;
+        return false;
+    }
+}
+
 std::string sql_timestamp() {
     /*
      * Returns the current system timestamp in SQL Format as:
