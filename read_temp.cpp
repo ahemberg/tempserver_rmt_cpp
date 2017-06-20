@@ -1,3 +1,7 @@
+/*
+ * Read Temp: Reads temperature and contacts server with upload. Keeps local data if server contact fails.
+ */
+
 #include "lib/pch.h"
 //Sensor read
 #include "lib/OneWireSensor.h"
@@ -5,73 +9,15 @@
 #include "lib/TalkToServer.h"
 //Database Functions
 #include "lib/dbFunctions.h"
-
 //Command Line parsing
 #include "lib/cl_parser.h"
-
+//Messages
 #include "lib/messages_eng.h"
+//Board Info
+#include "lib/read_rpi_board.h"
 
 using namespace std;
 using json = nlohmann::json;
-
-//JSON FUNCTIONS
-
-bool load_db_param(db_auth *params) {
-    /*
-     * Loads database authentication info from local secrets file. Params should point to a
-     * db_auth struct. Secrets file has to be located in $HOME/tempserver_remote/cpp/
-     *
-     * Returns true if file was loaded properly, false otherwise.
-     *
-     */
-
-    const char * homeDir = getenv("HOME");
-    const char * filePath = "/tempserver_remote/cpp/secrets";
-
-    char path[100];
-
-    strcpy(path, homeDir);
-    strcat(path, filePath);
-
-    ifstream i(path);
-
-    if (i) {
-        try {
-            json j;
-            i >> j;
-            params->host = j["database_auth"]["host"];
-            params->database = j["database_auth"]["database"];
-            params->user = j["database_auth"]["user"];
-            params->pwd = j["database_auth"]["password"];
-        } catch (domain_error &e) {
-            cout << "Bad format in secrets file!" << endl;
-            return false;
-        }
-        return true;
-    } else {
-        cout << "Failed to load secrets file!" << endl;
-        return false;
-    }
-}
-
-string get_rpi_serial() {
-
-    ifstream i("/proc/cpuinfo");
-    string line;
-    string serial;
-
-    if (!i) {
-        return "0000000000000000";
-    }
-
-    while (getline(i, line)) {
-        if (line.find("Serial") != string::npos) {
-            serial = line.substr(line.length()- 16);
-            return serial;
-        }
-    }
-    return "00000000000000";
-}
 
 int main(int argc, char* argv[]) {
 

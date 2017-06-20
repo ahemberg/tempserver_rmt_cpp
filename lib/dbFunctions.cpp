@@ -134,6 +134,7 @@ std::vector<saved_temp> get_saved_temperatures(db_auth *auth) {
             rows[i].temp = res->getDouble("temp");
             i++;
         }
+
         delete res;
         delete stmt;
         delete con;
@@ -145,6 +146,8 @@ std::vector<saved_temp> get_saved_temperatures(db_auth *auth) {
         std::cout << " (MySQL error code: " << e.getErrorCode();
         std::cout << ", SQLState: " << e.getSQLState() << " )" << std::endl;
     }
+    std::vector<saved_temp> a;
+    return a;
 }
 
 bool save_temp(double temperature, db_auth *auth) {
@@ -189,7 +192,7 @@ bool remove_temps(db_auth auth, std::vector<saved_temp> temps_to_remove) {
 
         prep_stmt = con->prepareStatement("DELETE FROM saved_temp WHERE id = (?) AND measurement_time = (?)");
 
-        for (int i = 0; i < temps_to_remove.size(); i++) {
+        for (unsigned int i = 0; i < temps_to_remove.size(); i++) {
             prep_stmt->setInt(1,temps_to_remove[i].id);
             prep_stmt->setString(2,temps_to_remove[i].timestamp);
             prep_stmt->execute();
