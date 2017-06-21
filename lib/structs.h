@@ -29,6 +29,23 @@ struct remote_info {
     int remote_id;
 };
 
+struct board_memory {
+    double  mem_total, mem_free, total_used,
+            non_cabuf_mem,
+            buffers,
+            cache,
+            swap;
+};
+
+struct board_disk_status {
+    double size, used, available, used_p;
+};
+
+struct board_parameters {
+    board_memory memory;
+    board_disk_status disk;
+};
+
 typedef std::vector<saved_temp> temperature_vector;
 
 #endif //TEMPSERVER_RMT_CPP_STRUCTS_H
