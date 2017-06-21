@@ -7,6 +7,7 @@
 #include "lib/OneWireSensor.h"
 //Server Comm
 #include "lib/TalkToServer.h"
+#include "lib/SendTempToServer.h"
 //Database Functions
 #include "lib/dbFunctions.h"
 //Command Line parsing
@@ -103,14 +104,14 @@ int main(int argc, char* argv[]) {
     }
 
     //Send to server
-    TalkToServer server_session(remote, saved_temps);
+    SendTempToServer server_session(remote, saved_temps);
     if (cl.verbose) cout << msg.sending << endl;
 
     if (!server_session.post_to_server(server_session.encoded_post)) {
         cerr << msg.error_failed_server_contact << endl;
         return EXIT_FAILURE;
     };
-    server_session.parse_server_response();
+    server_session.parse_saved_temperatures();
 
     //TODO ERROR HANDLING FOR THIS STRING ??
 

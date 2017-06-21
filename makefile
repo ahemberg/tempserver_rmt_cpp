@@ -3,8 +3,8 @@ CSTD= -std=c++11
 
 all: read_temp
 
-read_temp: read_temp.o cl_parser.o dbFunctions.o OneWireSensor.o TalkToServer.o read_rpi_board.o
-	g++ $(CFLAGS) $(CSTD) read_temp.o cl_parser.o dbFunctions.o OneWireSensor.o TalkToServer.o read_rpi_board.o -o read_temp -Wall
+read_temp: read_temp.o cl_parser.o dbFunctions.o OneWireSensor.o TalkToServer.o SendTempToServer.o read_rpi_board.o
+	g++ $(CFLAGS) $(CSTD) read_temp.o cl_parser.o dbFunctions.o OneWireSensor.o TalkToServer.o SendTempToServer.o read_rpi_board.o -o read_temp -Wall
 
 update_status: update_status.o read_rpi_board.o
 	g++ $(CSTD) -Wall update_status.o read_rpi_board.o -o update_status
@@ -26,6 +26,9 @@ OneWireSensor.o: lib/OneWireSensor.cpp
 
 TalkToServer.o: lib/TalkToServer.cpp
 	g++ -c $(CSTD) lib/TalkToServer.cpp -Wall
+
+SendTempToServer.o: lib/SendTempToServer.cpp
+	g++ -c $(CSTD) lib/SendTempToServer.cpp -Wall
 
 read_rpi_board.o: lib/read_rpi_board.cpp
 	g++ -c $(CSTD) lib/read_rpi_board.cpp -Wall
