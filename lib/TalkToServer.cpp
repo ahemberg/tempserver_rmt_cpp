@@ -72,7 +72,6 @@ void TalkToServer::url_encode(const std::string &value) {
     encoded_post = "data=" + escaped.str();
 }
 
-
 bool TalkToServer::parse_server_response() {
 
     size_t key_status, key_message, key_saved_data;
