@@ -86,7 +86,6 @@ bool TalkToServer::parse_server_response() {
         || key_saved_data == std::string::npos
         || key_status == std::string::npos) return false;
 
-    //Somehow check consistency of response -- If no json is found, except and say so!
 
     auto server_response = nlohmann::json::parse(raw_server_response);
 
