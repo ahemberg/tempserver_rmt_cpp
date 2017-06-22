@@ -45,7 +45,7 @@ bool get_rpi_serial(std::string *s_no, bool set_null_if_fail) {
     return false;
 }
 
-bool get_cpu_temp(double *temp, bool set_neg_if_fail) {
+bool get_cpu_temp(board_cpu *cpu, bool set_neg_if_fail) {
 
     std::ifstream i("/sys/class/thermal/thermal_zone0/temp");
     std::string line;
@@ -54,7 +54,7 @@ bool get_cpu_temp(double *temp, bool set_neg_if_fail) {
         while (getline(i, line)) {
             if (line.length() == 5) {
                 try {
-                    *temp = std::stod(line) / 1000;
+                    cpu->temp = std::stod(line) / 1000;
                     return true;
                 } catch (std::invalid_argument &e) {
                     std::cerr << "Error Converting to double" << std::endl;
@@ -66,7 +66,7 @@ bool get_cpu_temp(double *temp, bool set_neg_if_fail) {
     } else {
         std::cerr << "Failed to read \"/sys/class/thermal/thermal_zone0/temp\"" << std::endl;
     }
-    if (set_neg_if_fail) *temp = -1;
+    if (set_neg_if_fail) cpu->temp = -1;
     return false;
 }
 
@@ -114,8 +114,8 @@ bool get_ram_info(board_memory *mem_info) {
             } else if (desc.compare("SwapFree") == 0) {
                 swap_free = size;
             }
-
         }
+
         mem_info->mem_total = mem_total;
         mem_info->mem_free = mem_free;
         mem_info->total_used = mem_total-mem_free;
@@ -123,41 +123,63 @@ bool get_ram_info(board_memory *mem_info) {
         mem_info->buffers = buf;
         mem_info->cache = cached + s_reclaimable - sh_mem;
         mem_info->swap = swap_total - swap_free;
+        std::string failed_to_read = "";
 
         if (mem_total == -1) {
             read_all_ok = false;
-            std::cerr << "Failed to read \"MemTotal\", some parameters might be invalid" << std::endl;
+            mem_info->total_used = -1;
+            mem_info->non_cabuf_mem = -1;
+            failed_to_read += " \"MemTotal\" ";
         }
         if (mem_free == -1) {
             read_all_ok = false;
-            std::cerr << "Failed to read \"MemFree\", some parameters might be invalid" << std::endl;
+            mem_info->total_used = -1;
+            mem_info->non_cabuf_mem = -1;
+            failed_to_read += " \"MemFree\" ";
         }
         if (buf == -1) {
             read_all_ok = false;
-            std::cerr << "Failed to read \"Buffers\", some parameters might be invalid" << std::endl;
+            mem_info->non_cabuf_mem = -1;
+            failed_to_read += " \"Buffers\" ";
         }
         if (cached == -1) {
             read_all_ok = false;
-            std::cerr << "Failed to read \"Cached\", some parameters might be invalid" << std::endl;
+            mem_info->non_cabuf_mem = -1;
+            mem_info->cache = -1;
+            failed_to_read += " \"Cached\" ";
         }
         if (s_reclaimable == -1) {
             read_all_ok = false;
-            std::cerr << "Failed to read \"SReclaimable\", some parameters might be invalid" << std::endl;
+            mem_info->cache = -1;
+            failed_to_read += " \"SReclaimable\" ";
         }
         if (sh_mem == -1) {
             read_all_ok = false;
-            std::cerr << "Failed to read \"Shmem\", some parameters might be invalid" << std::endl;
+            mem_info->cache = -1;
+            failed_to_read += " \"Shmem\" ";
         } if (swap_total == -1) {
             read_all_ok = false;
-            std::cerr << "Failed to read \"SwapTotal\", some parameters might be invalid" << std::endl;
+            mem_info->swap = -1;
+            failed_to_read += " \"SwapTotal\" ";
         }
         if (swap_free == -1) {
             read_all_ok = false;
-            std::cerr << "Failed to read \"SwapFree\", some parameters might be invalid" << std::endl;
+            mem_info->swap = -1;
+            failed_to_read += " \"SwapFree\" ";
         }
+        if (!read_all_ok) std::cerr << "Failed to read: "
+                                    << failed_to_read
+                                    << ", some parameters might be invalid" << std::endl;
         return read_all_ok;
     } else {
-        std::cerr << "Failed to read \"/sys/class/thermal/thermal_zone0/temp\"" << std::endl;
+        std::cerr << "Failed to read \"/proc/meminfo\"" << std::endl;
+        mem_info->mem_total = -1;
+        mem_info->mem_free = -1;
+        mem_info->total_used = -1;
+        mem_info->non_cabuf_mem = -1;
+        mem_info->buffers = -1;
+        mem_info->cache = -1;
+        mem_info->swap = -1;
     }
     return false;
 }
@@ -207,4 +229,46 @@ bool get_hdd_usage(board_disk_status *dsk) {
         return false;
     }
 
+}
+
+void ping_server(board_network_status *net, const char *ping) {
+    std::string cmd_out;
+    std::string file_system;
+    std::string line;
+    size_t s, t;
+    cmd_out = exec(ping);
+    double pingstat[4] = {-1,-1,-1,-1};
+    int n_send = -1, n_rec = -1;
+
+    std::istringstream iss(cmd_out);
+
+    while (std::getline(iss, line)) {
+        s = line.find("packets transmitted,"); //Finds second last line, statistics line
+        t = line.find("rtt min/avg/max/mdev");
+
+        if (s!= std::string::npos) {
+            std::istringstream iss2(line);
+            std::string foo1, foo2, pploss, foo3, foo4, foo5, rtt;
+            iss2 >> n_send >> foo1 >> foo2 >> n_rec >> pploss >> foo3 >> foo4 >> foo5 >> rtt;
+        }
+        if (t!= std::string::npos) {
+            std::istringstream iss3(line);
+            std::string foo6, foo7, foo8, rtt_stat, foo9, stat;
+            iss3 >> foo6 >> foo7 >> foo7 >> rtt_stat >> foo9;
+            std::istringstream iss4(rtt_stat);
+
+            int i = 0;
+            while (std::getline(iss4, stat, '/')) {
+                pingstat[i] = std::stod(stat);
+                i++;
+            }
+        }
+
+        net->sent = n_send;
+        net->received = n_rec;
+        net->min_ms = pingstat[0];
+        net->avg_ms = pingstat[1];
+        net->max_ms = pingstat[2];
+        net->mdev_ms = pingstat[3];
+    }
 }
