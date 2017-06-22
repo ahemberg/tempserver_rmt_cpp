@@ -4,6 +4,7 @@
 
 #include "SendTempToServer.h"
 
+
 SendTempToServer::SendTempToServer(remote_info rem_info, temperature_vector temps_to_send){
     local_temps = temps_to_send;
     remote_data = rem_info;
@@ -16,6 +17,7 @@ SendTempToServer::SendTempToServer(remote_info rem_info, temperature_vector temp
 }
 
 void SendTempToServer::generate_server_temperature_message() {
+
     nlohmann::json temperatures;
 
     for (unsigned int i = 0; i<local_temps.size(); i++) {
@@ -32,20 +34,16 @@ void SendTempToServer::generate_server_temperature_message() {
     server_message["remote_serial"] = remote_data.board_serial;
 }
 
-//TODO: SPLIT THIS SO THAT HIS PARSES, AND DATA IS HANDLED IN SUB_CLASS
-void SendTempToServer::parse_saved_temperatures() {
+//TODO Error handling
+bool SendTempToServer::parse_saved_temperatures() {
 
-    auto server_response = nlohmann::json::parse(raw_server_response);
-
-    server_response_code = server_response["status"];
-    server_response_msg = server_response["msg"];
-    server_saved_data = server_response["saved_data"];
-
+    if (!parse_server_response()) return false; //GETS parameters
     saved_temp t;
-    for (auto& element : server_response["saved_data"]) {
+    for (auto& element : server_saved_data) {
         t.timestamp = element["measurement_time"];
         t.id = element["id"];
         t.temp = element["temp"];
         temps_saved_on_server.push_back(t);
     }
+    return true;
 }
