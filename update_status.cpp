@@ -10,16 +10,26 @@
 #include <iostream>
 #include <string>
 
+#include "lib/json.hpp"
+
 #include "lib/structs.h"
 #include "lib/read_rpi_board.h"
+#include "lib/dbFunctions.h"
+#include "lib/SendStatusToServer.h"
 
 
 using namespace std;
 
 int main() {
+    SendStatusToServer send;
     board_parameters board;
+    db_auth sql_auth;
     string serial;
-    double cpu_temp;
+
+    //Read database authentication info
+    if (!load_db_param(&sql_auth)) {
+        return EXIT_FAILURE;
+    }
 
     //Get RPI Serial
     if (!get_rpi_serial(&serial)) {
@@ -29,37 +39,52 @@ int main() {
     }
 
     //Get CPU temp
-    if (!get_cpu_temp(&cpu_temp)) {
+    if (!get_cpu_temp(&board.cpu)) {
         cerr << "Failed to get cpu temp" << endl;
-    } else {
-        cout << "CPU Temp: " << cpu_temp << " \370C" << endl;
     }
-
 
     if(!get_ram_info(&board.memory)) {
         cerr << "Failed to get all memory parameters" << endl;
-    } else {
-        std::cout << "Memory status:" << std::endl;
-        std::cout << "Total:" << board.memory.mem_total/1e6 << " Free:" << board.memory.mem_free/1e6 << " Used: " << (board.memory.total_used)/1e6 << "MB" << std::endl;
-        std::cout << "Non cache/buffer memory: " << board.memory.non_cabuf_mem/1e6 << " MB" << std::endl;
-        std::cout << "Buffers: " << board.memory.buffers/1e6 << " MB" << std::endl;
-        std::cout << "Cached: " << board.memory.cache/1e6 << " MB" << std::endl;
-        std::cout << "Swap: " << board.memory.swap/1e6 << " MB" << std::endl;
     }
 
     //Get hdd usage
     if (!get_hdd_usage(&board.disk)) {
         cerr << "Failed to get disk info" << endl;
-    } else {
-        std::cout << "File system Usage:" << std::endl;
-        std::cout << "Size " << board.disk.size/1e6 << " MB" << std::endl;
-        std::cout << "Used " << board.disk.used/1e6 << " MB" << std::endl;
-        std::cout << "Avail " << board.disk.available/1e6 << " MB" << std::endl;
-        std::cout << "Used " << board.disk.used_p*100 << "%" << std::endl;
     }
 
-    //Assemble and send to server
+    ping_server(&board.network);
 
+    /*Old procedure:
+     * 1 measure
+     * 2 save local
+     * 3 retrieve all local
+     * 4 send to server
+     * 5a remove saved
+     * 5b keep non saved
+     * Alternative Procedure:
+     * 1 measure
+     * 2 retrieve local
+     * 3 assemble old with new
+     * 4 send
+     * 5a remove saved
+     * 5b keep non saved
+     * 5c save current measurement if not saved on server
+     *
+     * PROS:
+     * No write to SD if all is successful!
+     * Probably faster
+     * CON:
+     * Measurement lost if there are any interruptions
+     * Need to handle no answer properly!
+     * Implementation more complicated (Maybe this is a PRO?)
+     */
+
+
+    nlohmann::json board_info = send.create_status_blob(&board);
+
+
+
+    cout << board_info.dump(1) << endl;
 
     //Get available disk-space
     return EXIT_SUCCESS;
