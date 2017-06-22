@@ -41,9 +41,20 @@ struct board_disk_status {
     double size, used, available, used_p;
 };
 
+struct board_network_status {
+    double min_ms, avg_ms, max_ms, mdev_ms;
+    int sent, received;
+};
+
+struct board_cpu {
+    double temp;
+};
+
 struct board_parameters {
     board_memory memory;
     board_disk_status disk;
+    board_network_status network;
+    board_cpu cpu;
 };
 
 typedef std::vector<saved_temp> temperature_vector;
