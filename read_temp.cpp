@@ -49,6 +49,8 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    remote.server_address += "/api/save_temp";
+
     if (!get_rpi_serial(&remote.board_serial)) {
         cerr << msg.error_reading_board_serial << endl;
     }
@@ -75,7 +77,6 @@ int main(int argc, char* argv[]) {
     }
 
     if (!cl.send_to_server) {
-        //Exit if -l flag was used
         return EXIT_SUCCESS;
     }
 
@@ -111,7 +112,10 @@ int main(int argc, char* argv[]) {
         cerr << msg.error_failed_server_contact << endl;
         return EXIT_FAILURE;
     };
-    server_session.parse_saved_temperatures();
+    if (!server_session.parse_saved_temperatures()) {
+        cerr << msg.error_unexpected_server_response << endl;
+        return EXIT_FAILURE;
+    }
 
     //TODO ERROR HANDLING FOR THIS STRING ??
 
