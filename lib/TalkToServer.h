@@ -29,7 +29,7 @@ public:
 
     bool post_to_server(std::string post, std::string server_address = "");
     void url_encode(const std::string &value);
-    //void parse_server_response();
+    bool parse_server_response();
 };
 
 #endif //TEMPSERVER_RMT_CPP_TALKTOSERVER_H

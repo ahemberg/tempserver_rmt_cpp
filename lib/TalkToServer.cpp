@@ -17,7 +17,7 @@ bool TalkToServer::post_to_server(std::string post, std::string server_address) 
     //std::string readBuffer;
 
     if (server_address == "") {
-        server_address = remote_data.server_address + "/api/save_temp";
+        server_address = remote_data.server_address;
     }
 
     static const char *srv = server_address.c_str();
@@ -72,24 +72,27 @@ void TalkToServer::url_encode(const std::string &value) {
     encoded_post = "data=" + escaped.str();
 }
 
-//TODO: SPLIT THIS SO THAT HIS PARSES, AND DATA IS HANDLED IN SUB_CLASS
-/*
-void TalkToServer::parse_server_response() {
+
+bool TalkToServer::parse_server_response() {
+
+    size_t key_status, key_message, key_saved_data;
+
+    //Check if string is on the expected format
+    key_status = raw_server_response.find("\"status\"");
+    key_message = raw_server_response.find("\"msg\"");
+    key_saved_data = raw_server_response.find("\"saved_data\"");
+
+    if (key_message == std::string::npos
+        || key_saved_data == std::string::npos
+        || key_status == std::string::npos) return false;
+
+    //Somehow check consistency of response -- If no json is found, except and say so!
+
     auto server_response = nlohmann::json::parse(raw_server_response);
 
     server_response_code = server_response["status"];
     server_response_msg = server_response["msg"];
-    server_saved_data = server_response['saved_data'];
+    server_saved_data = server_response["saved_data"];
 
-
-    saved_temp t;
-    for (auto& element : server_response["saved_data"]) {
-        t.timestamp = element["measurement_time"];
-        t.id = element["id"];
-        t.temp = element["temp"];
-        temps_saved_on_server.push_back(t);
-    }
+    return true;
 }
-
-
-*/
