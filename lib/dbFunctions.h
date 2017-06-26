@@ -34,5 +34,8 @@ bool get_remote_info(db_auth *auth, remote_info *rem);
 std::vector<saved_temp> get_saved_temperatures(db_auth *auth);
 bool save_temp(double temperature, db_auth *auth);
 bool remove_temps(db_auth auth, std::vector<saved_temp> temps_to_remove);
+bool save_status_message(board_parameters *board_param, db_auth *auth);
+std::vector<board_parameters> get_saved_status_messages(db_auth *auth);
+bool remove_status_messages(db_auth *auth, board_vector measurements_to_remove);
 
 #endif //TEMPSERVER_RMT_CPP_DBFUNCTIONS_H
