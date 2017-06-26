@@ -70,6 +70,58 @@ bool get_cpu_temp(board_cpu *cpu, bool set_neg_if_fail) {
     return false;
 }
 
+bool get_cpu_load(board_cpu *cpu, bool set_neg_if_fail) {
+    /*
+     * Reads cpu load from cat /proc/stat
+     */
+
+    std::ifstream i("/proc/stat");
+    std::string line, cpu_s;
+    double user = -1, nice = -1, system = -1, idle = -1, iowait = -1, irq = -1, softirq = -1, total = -1;
+    bool success = false;
+
+    if (i) {
+        while (std::getline(i, line)) {
+            if (line.find("cpu") != std::string::npos) { //Only extracts aggregate line
+                std::istringstream iss(line);
+                iss >> cpu_s >> user >> nice >> system >> idle >> iowait >> irq >> softirq;
+                if(cpu_s.compare("cpu") != 0) continue;
+
+                total = user + nice + system + idle + iowait + irq + softirq;
+
+                user = round((user/total)*100);
+                nice = (nice/total)*100;
+                system =  (system/total)*100;
+                idle = (idle/total)*100;
+                iowait = (iowait/total)*100;
+                irq = (irq/total)*100;
+                softirq = (softirq/total)*100;
+                success = true;
+                break;
+            }
+        }
+    }
+
+    if (success) {
+        cpu->user = user;
+        cpu->nice = nice;
+        cpu->system = system;
+        cpu->idle = idle;
+        cpu->iowait = iowait;
+        cpu->irq = irq;
+        cpu->softirq = softirq;
+    } else if (set_neg_if_fail) {
+        cpu->user = -1;
+        cpu->nice = -1;
+        cpu->system = -1;
+        cpu->idle = -1;
+        cpu->iowait = -1;
+        cpu->irq = -1;
+        cpu->softirq = -1;
+    }
+    return success;
+}
+
 bool get_ram_info(board_memory *mem_info) {
     /*
      * Reads RAM memory status from /proc/meminfo. Reads out the same parameters as top/htop.

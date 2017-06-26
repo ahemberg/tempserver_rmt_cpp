@@ -27,7 +27,14 @@ nlohmann::json SendStatusToServer::create_status_blob(board_parameters *board) {
     j["network"]["max_lat"] = board->network.max_ms;
     j["network"]["mdev_lat"] = board->network.mdev_ms;
 
-    j["cpu"]["temp"]= board->cpu.temp;
+    j["cpu"]["temp"] = board->cpu.temp;
+    j["cpu"]["user"] = board->cpu.user;
+    j["cpu"]["nice"] = board->cpu.nice;
+    j["cpu"]["system"] = board->cpu.system;
+    j["cpu"]["idle"] = board->cpu.idle;
+    j["cpu"]["iowait"] = board->cpu.iowait;
+    j["cpu"]["irq"] = board->cpu.irq;
+    j["cpu"]["softirq"] = board->cpu.softirq;
 
     return j;
 }

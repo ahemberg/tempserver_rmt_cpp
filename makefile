@@ -1,7 +1,7 @@
 CFLAGS= -lcurl -lmysqlcppconn
 CSTD= -std=c++11
 
-all: read_temp
+all: read_temp update_status
 
 read_temp: read_temp.o cl_parser.o dbFunctions.o OneWireSensor.o TalkToServer.o SendTempToServer.o read_rpi_board.o
 	g++ $(CFLAGS) $(CSTD) read_temp.o cl_parser.o dbFunctions.o OneWireSensor.o TalkToServer.o SendTempToServer.o read_rpi_board.o -o read_temp -Wall

@@ -47,7 +47,7 @@ struct board_network_status {
 };
 
 struct board_cpu {
-    double temp;
+    double temp, user, nice, system, idle, iowait, irq, softirq;
 };
 
 struct board_parameters {

@@ -43,6 +43,11 @@ int main() {
         cerr << "Failed to get cpu temp" << endl;
     }
 
+    //Get CPU load
+    if (!get_cpu_load(&board.cpu)) {
+        cerr << "Failed to get cpu load" << endl;
+    };
+
     if(!get_ram_info(&board.memory)) {
         cerr << "Failed to get all memory parameters" << endl;
     }
@@ -81,8 +86,6 @@ int main() {
 
 
     nlohmann::json board_info = send.create_status_blob(&board);
-
-
 
     cout << board_info.dump(1) << endl;
 
