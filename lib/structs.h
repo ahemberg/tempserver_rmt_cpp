@@ -55,8 +55,11 @@ struct board_parameters {
     board_disk_status disk;
     board_network_status network;
     board_cpu cpu;
+    std::string timestamp;
+    int id;
 };
 
 typedef std::vector<saved_temp> temperature_vector;
+typedef std::vector<board_parameters> board_vector;
 
 #endif //TEMPSERVER_RMT_CPP_STRUCTS_H
