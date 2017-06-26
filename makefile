@@ -6,8 +6,8 @@ all: read_temp update_status
 read_temp: read_temp.o cl_parser.o dbFunctions.o OneWireSensor.o TalkToServer.o SendTempToServer.o read_rpi_board.o
 	g++ $(CFLAGS) $(CSTD) read_temp.o cl_parser.o dbFunctions.o OneWireSensor.o TalkToServer.o SendTempToServer.o read_rpi_board.o -o read_temp -Wall
 
-update_status: update_status.o read_rpi_board.o dbFunctions.o SendStatusToServer.o
-	g++ $(CFLAGS) $(CSTD) -Wall update_status.o read_rpi_board.o dbFunctions.o SendStatusToServer.o -o update_status
+update_status: update_status.o read_rpi_board.o dbFunctions.o TalkToServer.o SendStatusToServer.o
+	g++ $(CFLAGS) $(CSTD) -Wall update_status.o read_rpi_board.o dbFunctions.o TalkToServer.o SendStatusToServer.o -o update_status
 
 update_status.o: update_status.cpp
 	g++ -c $(CSTD) -Wall update_status.cpp
