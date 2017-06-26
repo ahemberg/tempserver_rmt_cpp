@@ -354,7 +354,7 @@ bool remove_status_messages(db_auth *auth, board_vector measurements_to_remove) 
         con = driver->connect(auth->host, auth->user, auth->pwd);
         con->setSchema(auth->database);
 
-        prep_stmt = con->prepareStatement("DELETE FROM saved_temp WHERE id = (?) AND measurement_time = (?)");
+        prep_stmt = con->prepareStatement("DELETE FROM remote_status_messages WHERE id = (?) AND measurement_time = (?)");
 
         for (unsigned int i = 0; i < measurements_to_remove.size(); i++) {
             prep_stmt->setInt(1,measurements_to_remove[i].id);
