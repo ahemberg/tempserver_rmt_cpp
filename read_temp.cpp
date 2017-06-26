@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
                 if (cl.verbose) cout << msg.removed << endl;
                 return EXIT_SUCCESS;
             }
-        }
+        } return EXIT_SUCCESS;
     } else {
         if (cl.print) cout << msg.error_failed_server_save << endl;
         if (cl.verbose) cout << msg.server_msg << server_session.server_message << endl;
