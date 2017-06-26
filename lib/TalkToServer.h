@@ -15,11 +15,12 @@
 
 class TalkToServer {
 private:
-
     static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
 
-public:
+protected:
+    bool parse_server_response();
 
+public:
     int server_response_code;
     std::string server_response_msg, encoded_post, raw_server_response = "";
     nlohmann::json server_message, server_saved_data;
@@ -29,7 +30,7 @@ public:
 
     bool post_to_server(std::string post, std::string server_address = "");
     void url_encode(const std::string &value);
-    bool parse_server_response();
+
 };
 
 #endif //TEMPSERVER_RMT_CPP_TALKTOSERVER_H
