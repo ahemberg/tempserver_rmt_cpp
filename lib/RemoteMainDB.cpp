@@ -56,7 +56,7 @@ bool RemoteMainDB::load_db_param(RemoteMainDB::db_auth *params, std::string path
     }
 }
 
-bool get_remote_info(RemoteMainDB::db_auth *auth, RemoteMainDB::remote_info *rem) {
+bool RemoteMainDB::get_remote_info(RemoteMainDB::db_auth *auth, RemoteMainDB::remote_info *rem) {
     /*
      * Gets remote information from the local remote database. Uses db_auth struct to
      * authenticate with the database. Populates a remote_info struct with remote information
@@ -80,7 +80,7 @@ bool get_remote_info(RemoteMainDB::db_auth *auth, RemoteMainDB::remote_info *rem
         stmt = con->createStatement();
         res = stmt->executeQuery(query);
 
-        remote_info rem_info;
+        RemoteMainDB::remote_info rem_info;
 
         while (res->next()) {
             rem->remote_id = res->getInt("remote_id");

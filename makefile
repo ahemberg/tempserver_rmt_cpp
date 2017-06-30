@@ -3,8 +3,8 @@ CSTD= -std=c++11
 
 all: read_temp update_status
 
-read_temp: read_temp.o cl_parser.o dbFunctions.o OneWireSensor.o TalkToServer.o SendTempToServer.o read_rpi_board.o
-	g++ $(CFLAGS) $(CSTD) read_temp.o cl_parser.o dbFunctions.o OneWireSensor.o TalkToServer.o SendTempToServer.o read_rpi_board.o -o read_temp -Wall
+read_temp: read_temp.o cl_parser.o dbFunctions.o OneWireSensor.o TalkToServer.o SendTempToServer.o read_rpi_board.o RemoteMainDB.o RemoteTempDB.o
+	g++ $(CFLAGS) $(CSTD) read_temp.o cl_parser.o dbFunctions.o OneWireSensor.o TalkToServer.o SendTempToServer.o RemoteMainDB.o RemoteTempDB.o read_rpi_board.o -o read_temp -Wall
 
 update_status: update_status.o read_rpi_board.o dbFunctions.o TalkToServer.o SendStatusToServer.o
 	g++ $(CFLAGS) $(CSTD) -Wall update_status.o read_rpi_board.o dbFunctions.o TalkToServer.o SendStatusToServer.o -o update_status
@@ -21,6 +21,12 @@ cl_parser.o: lib/cl_parser.cpp
 dbFunctions.o: lib/dbFunctions.cpp
 	g++ -c $(CSTD) lib/dbFunctions.cpp -Wall
 
+RemoteMainDB.o: lib/RemoteMainDB.cpp
+	g++ -c $(CSTD) lib/RemoteMainDB.cpp -Wall
+
+RemoteTempDB.o: lib/RemoteTempDB.cpp
+	g++ -c $(CSTD) lib/RemoteTempDB.cpp -Wall
+
 OneWireSensor.o: lib/OneWireSensor.cpp
 	g++ -c $(CSTD) lib/OneWireSensor.cpp -Wall
 
@@ -32,6 +38,9 @@ SendTempToServer.o: lib/SendTempToServer.cpp
 
 SendStatusToServer.o: lib/SendStatusToServer.cpp
 	g++ -c $(CSTD) lib/SendStatusToServer.cpp -Wall
+
+GetBoardStatus.o: lib/GetBoardStatus.cpp
+	g++ -c $(CSTD) lib/GetBoardStatus.cpp -Wall
 
 read_rpi_board.o: lib/read_rpi_board.cpp
 	g++ -c $(CSTD) lib/read_rpi_board.cpp -Wall

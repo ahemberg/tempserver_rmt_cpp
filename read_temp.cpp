@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
     //url_encode(server_message.dump());
     if (cl.verbose) cout << msg.sending << endl;
 
-    if (!tempsession.post_to_server(tempsession.encoded_post)) {
+    if (!tempsession.post_to_server(tempsession.encoded_post, tempsession.remote.server_address)) {
         cerr << msg.error_failed_server_contact << endl;
         return EXIT_FAILURE;
     };

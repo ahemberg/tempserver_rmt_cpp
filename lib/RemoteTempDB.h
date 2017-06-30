@@ -16,13 +16,13 @@ public:
         std::string timestamp;
     };
 
-    std::vector<saved_temp> saved_temperatures; //Uninitialized!!
+    std::vector<RemoteTempDB::saved_temp> saved_temperatures; //Uninitialized!!
 
     RemoteTempDB() = default;
 
-    std::vector<saved_temp> get_saved_temperatures(db_auth *auth);
+    std::vector<RemoteTempDB::saved_temp> get_saved_temperatures(RemoteTempDB::db_auth *auth);
     bool save_temp(double temperature, db_auth *auth);
-    bool remove_temps(db_auth auth, std::vector<saved_temp> temps_to_remove);
+    bool remove_temps(db_auth auth, std::vector<RemoteTempDB::saved_temp> temps_to_remove);
 protected:
 private:
 
