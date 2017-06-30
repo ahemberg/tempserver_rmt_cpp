@@ -3,18 +3,20 @@
 //
 
 #include "SendTempToServer.h"
-
-
-SendTempToServer::SendTempToServer(remote_info rem_info, temperature_vector temps_to_send){
-    local_temps = temps_to_send;
-    remote_data = rem_info;
+/*
+//SendTempToServer::SendTempToServer(SendTempToServer::remote_info rem_info, std::vector<SendTempToServer::saved_temp> temps_to_send, std::string path = "/tempserver_remote/cpp/secrets"){
+SendTempToServer::SendTempToServer(std::string secrets_path){
+    //load_db_param(&sql_auth, secrets_path);
+    //get_remote_info(&sql_auth, &remote_data);
+    //local_temps = temps_to_send;
 
     //Set server message
-    generate_server_temperature_message();
+    //generate_server_temperature_message();
 
     //Encode server message
-    url_encode(server_message.dump());
+    //url_encode(server_message.dump());
 }
+ */
 
 void SendTempToServer::generate_server_temperature_message() {
 

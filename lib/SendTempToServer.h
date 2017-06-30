@@ -9,17 +9,20 @@
 #include <string>
 #include <vector>
 #include "json.hpp"
-#include "structs.h"
+//#include "structs.h"
 
 #include "TalkToServer.h"
+#include "RemoteTempDB.h"
 
-class SendTempToServer : public TalkToServer {
+class SendTempToServer : public TalkToServer, public RemoteTempDB {
 private:
-    void generate_server_temperature_message();
+//    void generate_server_temperature_message();
 public:
-    temperature_vector local_temps, temps_saved_on_server;
-
-    SendTempToServer(remote_info rem_info, temperature_vector temps_to_send);
+    void generate_server_temperature_message();
+    std::vector<SendTempToServer::saved_temp> local_temps, temps_saved_on_server;
+    //temperature_vector local_temps, temps_saved_on_server;
+    SendTempToServer() = default;
+    //SendTempToServer(std::string secrets_path  = "/tempserver_remote/cpp/secrets");
     bool parse_saved_temperatures();
 };
 
