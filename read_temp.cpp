@@ -2,14 +2,8 @@
  * Read Temp: Reads temperature and contacts server with upload. Keeps local data if server contact fails.
  */
 
-#include "lib/pch.h"
 //Sensor read
 #include "lib/OneWireSensor.h"
-//Server Comm
-#include "lib/TalkToServer.h"
-#include "lib/SendTempToServer.h"
-//Database Functions
-#include "lib/dbFunctions.h"
 //Command Line parsing
 #include "lib/cl_parser.h"
 //Messages
@@ -17,19 +11,23 @@
 //Board Info
 #include "lib/read_rpi_board.h"
 
+#include "lib/SendTempToServer.h"
+
+#include <iostream>
+#include <string.h>
+#include <vector>
+
+
 using namespace std;
-using json = nlohmann::json;
 
 int main(int argc, char* argv[]) {
 
-    string sensor_serial, server_response_raw, urlencode_post;
-    temperature_vector saved_temps, temps_saved_on_server;
-    json server_message_json;
-    remote_info remote;
-    db_auth sql_auth;
+    vector<SendTempToServer::saved_temp> saved_temps, temps_saved_on_server;
     OneWireSensor temp_sensor;
     cl_opt cl;
     output_messages msg;
+
+    SendTempToServer tempsession;
 
     // Parse command line options
     if (!parse_cl_opt(argc, argv, &cl)) {
@@ -37,27 +35,27 @@ int main(int argc, char* argv[]) {
     }
 
     //Read database authentication info
-    if (!load_db_param(&sql_auth)) {
+    if (!tempsession.load_db_param(&tempsession.sql_auth)) {
         return EXIT_FAILURE;
     }
 
     //Get locally stored remote info
     if (cl.verbose) cout << msg.reading_rem_info << endl;
 
-    if (!get_remote_info(&sql_auth, &remote)) {
+    if (!tempsession.get_remote_info(&tempsession.sql_auth, &tempsession.remote)) {
         cerr << msg.error_reading_rem_info << endl;
         return EXIT_FAILURE;
     }
 
-    remote.server_address += "/api/save_temp";
+    tempsession.remote.server_address += "/api/save_temp";
 
-    if (!get_rpi_serial(&remote.board_serial)) {
+    if (!get_rpi_serial(&tempsession.remote.board_serial)) {
         cerr << msg.error_reading_board_serial << endl;
     }
 
     if (cl.measure_temp) {
         if (cl.verbose) cout << msg.reading_sensor << endl;
-        temp_sensor.read_temp(remote.sensor_directory, remote.sensor_serial);
+        temp_sensor.read_temp(tempsession.remote.sensor_directory, tempsession.remote.sensor_serial);
         if (temp_sensor.sensor_temp == 999) {
             cerr << msg.error_reading_temp << endl;
             return EXIT_FAILURE;
@@ -68,7 +66,7 @@ int main(int argc, char* argv[]) {
 
         if (cl.save_local) {
             if (cl.verbose) cout << msg.saving_to_local << endl;
-            if (!save_temp(temp_sensor.sensor_temp, &sql_auth)) {
+            if (!tempsession.save_temp(temp_sensor.sensor_temp, &tempsession.sql_auth)) {
                 cerr << msg.error_storing_local << endl;
                 return EXIT_FAILURE;
             }
@@ -82,14 +80,14 @@ int main(int argc, char* argv[]) {
 
     if (!cl.save_local && cl.measure_temp) {
         //Only send last temp
-        saved_temp local_meas;
+        SendTempToServer::saved_temp local_meas;
         local_meas.temp = temp_sensor.sensor_temp;
-        local_meas.timestamp = sql_timestamp();
+        local_meas.timestamp = tempsession.sql_timestamp();
         local_meas.id = 0;
         saved_temps.push_back(local_meas);
     } else {
         if (cl.verbose) cout << msg.getting_local_stored << endl;
-        saved_temps = get_saved_temperatures(&sql_auth);
+        saved_temps = tempsession.get_saved_temperatures(&tempsession.sql_auth);
     }
 
     if (saved_temps.size() == 0) {
@@ -99,41 +97,46 @@ int main(int argc, char* argv[]) {
 
     if (cl.verbose) {
         cout << msg.data_to_send << endl;
-        for (temperature_vector::iterator it = saved_temps.begin(); it != saved_temps.end(); it++) {
+        for (vector<SendTempToServer::saved_temp>::iterator it = saved_temps.begin(); it != saved_temps.end(); it++) {
             cout << "ID: " << it->id << " TEMP: " << it->temp << " TIME: " << it->timestamp << endl;
         }
     }
 
     //Send to server
-    SendTempToServer server_session(remote, saved_temps);
+    //SendTempToServer server_session(remote, saved_temps);
+    tempsession.local_temps = saved_temps;
+    tempsession.generate_server_temperature_message();
+    tempsession.url_encode(tempsession.server_message.dump());
+    //Encode server message
+    //url_encode(server_message.dump());
     if (cl.verbose) cout << msg.sending << endl;
 
-    if (!server_session.post_to_server(server_session.encoded_post)) {
+    if (!tempsession.post_to_server(tempsession.encoded_post)) {
         cerr << msg.error_failed_server_contact << endl;
         return EXIT_FAILURE;
     };
-    if (!server_session.parse_saved_temperatures()) {
+    if (!tempsession.parse_saved_temperatures()) {
         cerr << msg.error_unexpected_server_response << endl;
         return EXIT_FAILURE;
     }
 
     //TODO ERROR HANDLING FOR THIS STRING ??
 
-    if (server_session.server_response_code == 1) {
+    if (tempsession.server_response_code == 1) {
         if (cl.print) cout << msg.server_save_ok << endl;
-        if (cl.verbose) cout << msg.server_msg << server_session.server_response_msg << endl;
+        if (cl.verbose) cout << msg.server_msg << tempsession.server_response_msg << endl;
 
         if (cl.save_local) {
             //Option remote was used. Do not look in db.
             if (cl.verbose) cout << msg.removing_local << endl;
-            if (remove_temps(sql_auth, server_session.temps_saved_on_server)) {
+            if (tempsession.remove_temps(tempsession.sql_auth, tempsession.temps_saved_on_server)) {
                 if (cl.verbose) cout << msg.removed << endl;
                 return EXIT_SUCCESS;
             }
         } return EXIT_SUCCESS;
     } else {
         if (cl.print) cout << msg.error_failed_server_save << endl;
-        if (cl.verbose) cout << msg.server_msg << server_session.server_message << endl;
+        if (cl.verbose) cout << msg.server_msg << tempsession.server_message << endl;
         if (cl.verbose) cout << msg.local_storage_kept << endl;
         return EXIT_FAILURE;
     }
