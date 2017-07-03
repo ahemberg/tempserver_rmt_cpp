@@ -29,8 +29,10 @@ public:
     remote_info remote_data;
 
     //TalkToServer(remote_info rem_info, temperature_vector temps_to_send);
-
+    bool post_to_server();
     bool post_to_server(std::string post, std::string server_address = "");
+
+    //std::string url_encode(const std::string &value);
     void url_encode(const std::string &value);
 
 };

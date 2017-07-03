@@ -11,6 +11,10 @@ size_t TalkToServer::WriteCallback(void *contents, size_t size, size_t nmemb, vo
     return size * nmemb;
 }
 
+bool TalkToServer::post_to_server() {
+    return TalkToServer::post_to_server(encoded_post, remote.server_address);
+};
+
 bool TalkToServer::post_to_server(std::string post, std::string server_address) {
     CURL *curl;
     CURLcode res;

@@ -4,6 +4,10 @@
 
 #include "RemoteTempDB.h"
 
+std::vector<RemoteTempDB::saved_temp> RemoteTempDB::get_saved_temperatures() {
+    return RemoteTempDB::get_saved_temperatures(&sql_auth);
+}
+
 std::vector<RemoteTempDB::saved_temp> RemoteTempDB::get_saved_temperatures(RemoteTempDB::db_auth *auth) {
 
     std::string query = "SELECT * FROM saved_temp ORDER BY measurement_time DESC LIMIT 50";
@@ -46,6 +50,10 @@ std::vector<RemoteTempDB::saved_temp> RemoteTempDB::get_saved_temperatures(Remot
     }
     std::vector<RemoteTempDB::saved_temp> a;
     return a;
+}
+
+bool RemoteTempDB::save_temp(double temperature) {
+    RemoteTempDB::save_temp(temperature, &sql_auth);
 }
 
 bool RemoteTempDB::save_temp(double temperature, RemoteTempDB::db_auth *auth) {

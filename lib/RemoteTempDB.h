@@ -20,7 +20,10 @@ public:
 
     RemoteTempDB() = default;
 
+    std::vector<RemoteTempDB::saved_temp> get_saved_temperatures();
     std::vector<RemoteTempDB::saved_temp> get_saved_temperatures(RemoteTempDB::db_auth *auth);
+
+    bool save_temp(double temperature);
     bool save_temp(double temperature, db_auth *auth);
     bool remove_temps(db_auth auth, std::vector<RemoteTempDB::saved_temp> temps_to_remove);
 protected:

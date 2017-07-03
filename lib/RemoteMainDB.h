@@ -46,8 +46,18 @@ public:
     RemoteMainDB() = default;
 
     std::string sql_timestamp();
-    bool get_remote_info(db_auth *auth, remote_info *rem);
+
+    //Overloaded Load db Param. Version one loads param to external variable, other sets class local.
     bool load_db_param(db_auth *params, std::string path = "/tempserver_remote/cpp/secrets");
+    bool load_db_param(std::string path = "/tempserver_remote/cpp/secrets");
+
+    //Overloaded get remote info
+    bool get_remote_info(); //Uses local sql_auth, stores in local remote
+    bool get_remote_info(remote_info *rem); //Uses local sql_auth, stores to external rem
+    bool get_remote_info(db_auth *auth, remote_info *rem); //Uses external auth, stores to external rem
+
+
+
 protected:
 
 private:

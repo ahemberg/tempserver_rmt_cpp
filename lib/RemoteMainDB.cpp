@@ -23,6 +23,10 @@ std::string RemoteMainDB::sql_timestamp() {
     return str;
 }
 
+bool RemoteMainDB::load_db_param(std::string path) {
+    return RemoteMainDB::load_db_param(&sql_auth, path);
+}
+
 bool RemoteMainDB::load_db_param(RemoteMainDB::db_auth *params, std::string path) {
     /*
      * Loads database authentication info from local secrets file. Params should point to a
@@ -54,6 +58,14 @@ bool RemoteMainDB::load_db_param(RemoteMainDB::db_auth *params, std::string path
         std::cout << "Failed to load secrets file!" << std::endl;
         return false;
     }
+}
+
+bool RemoteMainDB::get_remote_info() {
+    return RemoteMainDB::get_remote_info(&sql_auth, &remote);
+}
+
+bool RemoteMainDB::get_remote_info(remote_info *rem) {
+    return RemoteMainDB::get_remote_info(&sql_auth, rem);
 }
 
 bool RemoteMainDB::get_remote_info(RemoteMainDB::db_auth *auth, RemoteMainDB::remote_info *rem) {
