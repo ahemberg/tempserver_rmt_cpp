@@ -22,7 +22,7 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-    vector<SendTempToServer::saved_temp> saved_temps, temps_saved_on_server;
+    //vector<SendTempToServer::saved_temp> saved_temps, temps_saved_on_server;
     OneWireSensor temp_sensor;
     cl_opt cl;
     output_messages msg;
@@ -35,14 +35,14 @@ int main(int argc, char* argv[]) {
     }
 
     //Read database authentication info
-    if (!tempsession.load_db_param(&tempsession.sql_auth)) {
+    if (!tempsession.load_db_param()) {
         return EXIT_FAILURE;
     }
 
     //Get locally stored remote info
     if (cl.verbose) cout << msg.reading_rem_info << endl;
 
-    if (!tempsession.get_remote_info(&tempsession.sql_auth, &tempsession.remote)) {
+    if (!tempsession.get_remote_info()) {
         cerr << msg.error_reading_rem_info << endl;
         return EXIT_FAILURE;
     }
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 
         if (cl.save_local) {
             if (cl.verbose) cout << msg.saving_to_local << endl;
-            if (!tempsession.save_temp(temp_sensor.sensor_temp, &tempsession.sql_auth)) {
+            if (!tempsession.save_temp(temp_sensor.sensor_temp)) {
                 cerr << msg.error_storing_local << endl;
                 return EXIT_FAILURE;
             }
@@ -84,34 +84,34 @@ int main(int argc, char* argv[]) {
         local_meas.temp = temp_sensor.sensor_temp;
         local_meas.timestamp = tempsession.sql_timestamp();
         local_meas.id = 0;
-        saved_temps.push_back(local_meas);
+        //saved_temps.push_back(local_meas);
+        tempsession.local_temps.push_back(local_meas);
     } else {
         if (cl.verbose) cout << msg.getting_local_stored << endl;
-        saved_temps = tempsession.get_saved_temperatures(&tempsession.sql_auth);
+        tempsession.local_temps = tempsession.get_saved_temperatures();
     }
 
-    if (saved_temps.size() == 0) {
+    if (tempsession.local_temps.size() == 0) {
         if (cl.print) cout << msg.no_send_exit << endl;
         return EXIT_SUCCESS;
     }
 
     if (cl.verbose) {
         cout << msg.data_to_send << endl;
-        for (vector<SendTempToServer::saved_temp>::iterator it = saved_temps.begin(); it != saved_temps.end(); it++) {
+        for (vector<SendTempToServer::saved_temp>::iterator it = tempsession.local_temps.begin(); it != tempsession.local_temps.end(); it++) {
             cout << "ID: " << it->id << " TEMP: " << it->temp << " TIME: " << it->timestamp << endl;
         }
     }
 
     //Send to server
-    //SendTempToServer server_session(remote, saved_temps);
-    tempsession.local_temps = saved_temps;
     tempsession.generate_server_temperature_message();
-    tempsession.url_encode(tempsession.server_message.dump());
     //Encode server message
-    //url_encode(server_message.dump());
+
+    tempsession.url_encode(tempsession.server_message.dump());
+
     if (cl.verbose) cout << msg.sending << endl;
 
-    if (!tempsession.post_to_server(tempsession.encoded_post, tempsession.remote.server_address)) {
+    if (!tempsession.post_to_server()) {
         cerr << msg.error_failed_server_contact << endl;
         return EXIT_FAILURE;
     };
