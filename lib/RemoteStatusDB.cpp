@@ -72,6 +72,8 @@ bool RemoteStatusDB::save_status_message(RemoteStatusDB::board_parameters *board
     return true;
 }
 
+
+
 std::vector<RemoteStatusDB::board_parameters> RemoteStatusDB::get_saved_status_messages() {
     return RemoteStatusDB::get_saved_status_messages(&sql_auth);
 }

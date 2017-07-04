@@ -20,11 +20,7 @@
 using namespace std;
 
 int main() {
-    //SendStatusToServer::board_parameters board;
-    vector<SendStatusToServer::board_parameters> saved_measurements, received_measurements;
-    //SendStatusToServer::remote_info remote;
-    //SendStatusToServer::db_auth sql_auth;
-    //string serial;
+    //vector<SendStatusToServer::board_parameters> saved_measurements, received_measurements;
 
     SendStatusToServer foo;
 
@@ -51,7 +47,6 @@ int main() {
     if (!foo.get_cpu_temp(&foo.new_measurement.cpu)) {
         cerr << "Failed to get cpu temp" << endl;
     }
-    cout << "a: " << foo.remote.board_serial << endl;
 
     //Get CPU load
     if (!foo.get_cpu_load(&foo.new_measurement.cpu)) {
@@ -61,16 +56,15 @@ int main() {
     if(!foo.get_ram_info(&foo.new_measurement.memory)) {
         cerr << "Failed to get all memory parameters" << endl;
     }
-    cout << "a: " << foo.remote.board_serial << endl;
 
     //Get hdd usage
     if (!foo.get_hdd_usage(&foo.new_measurement.disk)) {
         cerr << "Failed to get disk info" << endl;
     }
-    cout << "a: " << foo.remote.board_serial << endl;
+
 
     foo.ping_server(&foo.new_measurement.network);
-    cout << "a: " << foo.remote.board_serial << endl;
+
 
     //Get measurement timestamp and set id to 0
     //foo.new_measurement.timestamp = foo.sql_timestamp();
@@ -81,28 +75,19 @@ int main() {
 
     //Insert measurement to dB
     foo.save_status_message();
-    cout << "a: " << foo.remote.board_serial << endl;
 
     //Retrieve all measurements from dB
-    saved_measurements = foo.get_saved_status_messages();
-    cout << "a: " << foo.remote.board_serial << endl;
+    foo.measurements_to_send = foo.get_saved_status_messages();
 
-    //SendStatusToServer send(remote, saved_measurements);
-    //new_measurement = status;
-    //old_measurements = old;
-    //combine_measurements();
-    foo.measurements_to_send = saved_measurements;
-    cout << "a: " << foo.remote.board_serial << endl;
     foo.generate_server_status_message();
-    cout << "a: " << foo.remote.board_serial << endl;
+
     foo.url_encode(foo.server_message.dump());
-    cout << "a: " << foo.remote.board_serial << endl;
+
 
     foo.post_to_server(foo.encoded_post);
-    cout << "a: " << foo.remote.board_serial << endl;
+
     foo.parse_saved_messages();
 
-    cout << "a: " << foo.remote.board_serial << endl;
     cout << "Server status" << endl;
     cout << foo.server_response_code << endl;
 

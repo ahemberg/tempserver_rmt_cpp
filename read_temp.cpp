@@ -22,7 +22,6 @@ int main(int argc, char* argv[]) {
 
     OneWireSensor temp_sensor;
     CommandLineParser cl;
-
     SendTempToServer tempsession;
 
     // Parse command line options
@@ -101,7 +100,6 @@ int main(int argc, char* argv[]) {
     //Send to server
     tempsession.generate_server_temperature_message();
     //Encode server message
-
     tempsession.url_encode(tempsession.server_message.dump());
 
     if (cl.options.verbose) cout << cl.info.sending << endl;
@@ -110,6 +108,7 @@ int main(int argc, char* argv[]) {
         cerr << cl.errors.error_failed_server_contact << endl;
         return EXIT_FAILURE;
     };
+
     if (!tempsession.parse_saved_temperatures()) {
         cerr << cl.errors.error_unexpected_server_response << endl;
         return EXIT_FAILURE;
