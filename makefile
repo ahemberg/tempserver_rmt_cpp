@@ -3,8 +3,8 @@ CSTD= -std=c++11
 
 all: read_temp update_status
 
-read_temp: read_temp.o cl_parser.o dbFunctions.o OneWireSensor.o TalkToServer.o SendTempToServer.o read_rpi_board.o RemoteMainDB.o RemoteTempDB.o
-	g++ $(CFLAGS) $(CSTD) read_temp.o cl_parser.o dbFunctions.o OneWireSensor.o TalkToServer.o SendTempToServer.o RemoteMainDB.o RemoteTempDB.o read_rpi_board.o -o read_temp -Wall
+read_temp: read_temp.o CommandLineParser.o dbFunctions.o OneWireSensor.o TalkToServer.o SendTempToServer.o read_rpi_board.o RemoteMainDB.o RemoteTempDB.o
+	g++ $(CFLAGS) $(CSTD) read_temp.o CommandLineParser.o dbFunctions.o OneWireSensor.o TalkToServer.o SendTempToServer.o RemoteMainDB.o RemoteTempDB.o read_rpi_board.o -o read_temp -Wall
 
 update_status: update_status.o read_rpi_board.o dbFunctions.o TalkToServer.o SendStatusToServer.o
 	g++ $(CFLAGS) $(CSTD) -Wall update_status.o read_rpi_board.o dbFunctions.o TalkToServer.o SendStatusToServer.o -o update_status
@@ -15,8 +15,8 @@ update_status.o: update_status.cpp
 read_temp.o: read_temp.cpp
 	g++ -c $(CSTD) read_temp.cpp -Wall
 
-cl_parser.o: lib/cl_parser.cpp
-	g++ -c $(CSTD) lib/cl_parser.cpp -Wall
+CommandLineParser.o: lib/CommandLineParser.cpp
+	g++ -c $(CSTD) lib/CommandLineParser.cpp -Wall
 
 dbFunctions.o: lib/dbFunctions.cpp
 	g++ -c $(CSTD) lib/dbFunctions.cpp -Wall
