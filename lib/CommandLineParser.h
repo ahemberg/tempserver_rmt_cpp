@@ -50,8 +50,8 @@ public:
 
     CommandLineParser() = default;
 
-    bool parse_cl_opt(int c, char *v[]);
-    void show_usage(std::string name);
+    bool parse_cl_opt_rt(int c, char **v);
+    void show_usage_rt(std::string name);
 
 protected:
 

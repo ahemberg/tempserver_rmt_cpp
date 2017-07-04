@@ -4,7 +4,7 @@
 
 #include "CommandLineParser.h"
 
-void CommandLineParser::show_usage(std::string name) {
+void CommandLineParser::show_usage_rt(std::string name) {
     //TODO: Implement long options too
     std::cerr << "Usage: " << name << " <option(s)>\n"
               << "Options:\n"
@@ -21,12 +21,12 @@ void CommandLineParser::show_usage(std::string name) {
               << std::endl;
 }
 
-bool CommandLineParser::parse_cl_opt(int c, char *v[]) {
+bool CommandLineParser::parse_cl_opt_rt(int c, char **v) {
     int opt;
     while ((opt = getopt(c, v, "s:o:h")) != -1) {
         switch (opt) {
             case 'h':
-                show_usage(v[0]);
+                show_usage_rt(v[0]);
                 return false;
             case 's':
                 if (!strcmp(optarg, "local")) {
@@ -40,7 +40,7 @@ bool CommandLineParser::parse_cl_opt(int c, char *v[]) {
                     options.measure_temp = false;
                 } else {
                     std::cout << "Invalid option: " << optarg << std::endl;
-                    show_usage(v[0]);
+                    show_usage_rt(v[0]);
                     return false;
                 }
                 break;
@@ -52,15 +52,14 @@ bool CommandLineParser::parse_cl_opt(int c, char *v[]) {
                     options.print = false;
                 } else {
                     std::cout << "Invalid option: " << optarg << std::endl;
-                    show_usage(v[0]);
+                    show_usage_rt(v[0]);
                     return false;
                 }
                 break;
             default:
-                show_usage(v[0]);
+                show_usage_rt(v[0]);
                 return false;
         }
     }
     return true;
 }
-
