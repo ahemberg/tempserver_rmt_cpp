@@ -32,8 +32,8 @@ void SendTempToServer::generate_server_temperature_message() {
     }
 
     server_message["temperatures"] = temperatures;
-    server_message["remote_id"] = remote_data.remote_id;
-    server_message["remote_serial"] = remote_data.board_serial;
+    server_message["remote_id"] = remote.remote_id;
+    server_message["remote_serial"] = remote.board_serial;
 }
 
 //TODO Error handling

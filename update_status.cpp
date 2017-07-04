@@ -12,93 +12,111 @@
 
 #include "lib/json.hpp"
 
-#include "lib/structs.h"
-#include "lib/read_rpi_board.h"
-#include "lib/dbFunctions.h"
+//#include "lib/structs.h"
+//#include "lib/read_rpi_board.h"
+//#include "lib/dbFunctions.h"
 #include "lib/SendStatusToServer.h"
-
 
 using namespace std;
 
 int main() {
-    board_parameters board;
-    vector<board_parameters> saved_measurements, received_measurements;
-    remote_info remote;
-    db_auth sql_auth;
-    string serial;
+    //SendStatusToServer::board_parameters board;
+    vector<SendStatusToServer::board_parameters> saved_measurements, received_measurements;
+    //SendStatusToServer::remote_info remote;
+    //SendStatusToServer::db_auth sql_auth;
+    //string serial;
+
+    SendStatusToServer foo;
 
     //Read database authentication info
-    if (!load_db_param(&sql_auth)) {
+    if (!foo.load_db_param()) {
         return EXIT_FAILURE;
     }
 
     //Read remote info from db
-    if (!get_remote_info(&sql_auth, &remote)) {
+    if (!foo.get_remote_info()) {
         return EXIT_FAILURE;
     }
 
-    remote.server_address += "/api/update_status";
+    foo.remote.server_address += "/api/update_status";
 
     //Get RPI Serial
-    if (!get_rpi_serial(&remote.board_serial)) {
+    if (!foo.get_rpi_serial(&foo.remote.board_serial)) {
         cerr << "Failed to get board serial" << endl;
     } else {
-        cout << "Board serial: " << remote.board_serial << endl;
+        cout << "Board serial: " << foo.remote.board_serial << endl;
     }
 
     //Get CPU temp
-    if (!get_cpu_temp(&board.cpu)) {
+    if (!foo.get_cpu_temp(&foo.new_measurement.cpu)) {
         cerr << "Failed to get cpu temp" << endl;
     }
+    cout << "a: " << foo.remote.board_serial << endl;
 
     //Get CPU load
-    if (!get_cpu_load(&board.cpu)) {
+    if (!foo.get_cpu_load(&foo.new_measurement.cpu)) {
         cerr << "Failed to get cpu load" << endl;
     };
 
-    if(!get_ram_info(&board.memory)) {
+    if(!foo.get_ram_info(&foo.new_measurement.memory)) {
         cerr << "Failed to get all memory parameters" << endl;
     }
+    cout << "a: " << foo.remote.board_serial << endl;
 
     //Get hdd usage
-    if (!get_hdd_usage(&board.disk)) {
+    if (!foo.get_hdd_usage(&foo.new_measurement.disk)) {
         cerr << "Failed to get disk info" << endl;
     }
+    cout << "a: " << foo.remote.board_serial << endl;
 
-    ping_server(&board.network);
+    foo.ping_server(&foo.new_measurement.network);
+    cout << "a: " << foo.remote.board_serial << endl;
 
     //Get measurement timestamp and set id to 0
-    board.timestamp = sql_timestamp();
-    board.id = 0;
+    //foo.new_measurement.timestamp = foo.sql_timestamp();
+    //foo.new_measurement.id = 0; SEE TODO BELOW
 
     //TODO: This is heavy on the memory card. Will kill it after a year or two
     //TODO: Do not save if not necessary Save only on fail
 
     //Insert measurement to dB
-    save_status_message(&board, &sql_auth);
+    foo.save_status_message();
+    cout << "a: " << foo.remote.board_serial << endl;
 
     //Retrieve all measurements from dB
-    saved_measurements = get_saved_status_messages(&sql_auth);
+    saved_measurements = foo.get_saved_status_messages();
+    cout << "a: " << foo.remote.board_serial << endl;
 
-    SendStatusToServer send(remote, saved_measurements);
+    //SendStatusToServer send(remote, saved_measurements);
+    //new_measurement = status;
+    //old_measurements = old;
+    //combine_measurements();
+    foo.measurements_to_send = saved_measurements;
+    cout << "a: " << foo.remote.board_serial << endl;
+    foo.generate_server_status_message();
+    cout << "a: " << foo.remote.board_serial << endl;
+    foo.url_encode(foo.server_message.dump());
+    cout << "a: " << foo.remote.board_serial << endl;
 
-    send.post_to_server(send.encoded_post);
-    send.parse_saved_messages();
+    foo.post_to_server(foo.encoded_post);
+    cout << "a: " << foo.remote.board_serial << endl;
+    foo.parse_saved_messages();
 
+    cout << "a: " << foo.remote.board_serial << endl;
     cout << "Server status" << endl;
-    cout << send.server_response_code << endl;
+    cout << foo.server_response_code << endl;
 
     cout << "Server Message" << endl;
-    cout << send.server_response_msg << endl;
+    cout << foo.server_response_msg << endl;
 
-    if (send.server_response_code == 1) {
+    if (foo.server_response_code == 1) {
         cout << "Server contact OK. Removing messages saved on server" << endl;
-        remove_status_messages(&sql_auth, send.server_saved_messages);
+        foo.remove_status_messages(foo.server_saved_messages);
         return EXIT_SUCCESS;
     } else {
         cerr << "Server contact FAIL. Local storage has been kept" << endl;
-        cerr << send.server_response_code << endl;
-        cerr << send.server_response_msg << endl;
+        cerr << foo.server_response_code << endl;
+        cerr << foo.server_response_msg << endl;
     }
 
     return EXIT_FAILURE;

@@ -21,7 +21,7 @@ bool TalkToServer::post_to_server(std::string post, std::string server_address) 
     //std::string readBuffer;
 
     if (server_address == "") {
-        server_address = remote_data.server_address;
+        server_address = remote.server_address;
     }
 
     static const char *srv = server_address.c_str();

@@ -26,7 +26,7 @@ public:
     int server_response_code;
     std::string server_response_msg, encoded_post, raw_server_response = "";
     nlohmann::json server_message, server_saved_data;
-    remote_info remote_data;
+    //remote_info remote_data;
 
     //TalkToServer(remote_info rem_info, temperature_vector temps_to_send);
     bool post_to_server();

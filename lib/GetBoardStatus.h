@@ -43,6 +43,9 @@ public:
         int id;
     };
 
+    GetBoardStatus::board_parameters new_measurement;
+    std::vector<GetBoardStatus::board_parameters> old_measurements, measurements_to_send, server_saved_messages;
+
     GetBoardStatus() = default;
     bool get_rpi_serial(std::string *s_no, bool set_null_if_fail = true);
 

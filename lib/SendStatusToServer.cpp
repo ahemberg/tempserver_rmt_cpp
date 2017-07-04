@@ -3,7 +3,7 @@
 //
 
 #include "SendStatusToServer.h"
-
+/*
 SendStatusToServer::SendStatusToServer(remote_info rem_info, board_vector measurements) {
     remote_data = rem_info;
     //new_measurement = status;
@@ -13,7 +13,7 @@ SendStatusToServer::SendStatusToServer(remote_info rem_info, board_vector measur
     generate_server_status_message();
     url_encode(server_message.dump());
 }
-
+*/
 void SendStatusToServer::combine_measurements() {
     measurements_to_send = old_measurements;
     measurements_to_send.push_back(new_measurement);
@@ -28,8 +28,8 @@ void SendStatusToServer::generate_server_status_message() {
     }
 
     server_message["status"] = status_record;
-    server_message["remote_id"] = remote_data.remote_id;
-    server_message["remote_serial"] = remote_data.board_serial;
+    server_message["remote_id"] = remote.remote_id;
+    server_message["remote_serial"] = remote.board_serial;
 }
 
 bool SendStatusToServer::parse_saved_messages() {
@@ -77,9 +77,9 @@ nlohmann::json SendStatusToServer::create_status_blob(board_parameters *board) {
     return j;
 }
 
-board_vector SendStatusToServer::parse_status_blob(nlohmann::json status_blob) {
+std::vector<SendStatusToServer::board_parameters> SendStatusToServer::parse_status_blob(nlohmann::json status_blob) {
 
-    board_vector received_blobs;
+    std::vector<SendStatusToServer::board_parameters> received_blobs;
 
     for (auto& j : status_blob) {
         board_parameters row;
