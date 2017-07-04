@@ -8,12 +8,12 @@
 #include "lib/CommandLineParser.h"
 //Board Info
 #include "lib/read_rpi_board.h"
-
+//Server Contact class
 #include "lib/SendTempToServer.h"
 
-#include <iostream>
-#include <string.h>
-#include <vector>
+//#include <iostream>
+//#include <string.h>
+//#include <vector>
 
 
 using namespace std;
