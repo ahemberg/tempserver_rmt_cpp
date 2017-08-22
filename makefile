@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS= -lcurl -lmysqlcppconn -Wall
 CSTD= -std=c++11
-OBJEDIR = obj/
+OBJDIR = obj/
 LOBJDIR = obj/lib/
 INCLUDES = lib/
 SOURCES= $(wildcard lib/*.cpp)
@@ -15,15 +15,15 @@ update_status: $(OBJDIR)update_status.o $(SOURCES:$(INCLUDES)%.cpp=$(LOBJDIR)%.o
 	$(CC) $(CFLAGS) $(CSTD) $^ -o $@
 
 $(OBJDIR)read_temp.o: read_temp.cpp
-	mkdir -p $(OBJDIR)
+	mkdir -p "$(OBJDIR)"
 	$(CC) -c $(CSTD) $< -o $@
 
 $(OBJDIR)update_status.o: update_status.cpp
-	mkdir -p $(OBJDIR)
+	mkdir -p "$(OBJDIR)"
 	$(CC) -c $(CSTD) $< -o $@
 
 $(LOBJDIR)%.o: $(INCLUDES)%.cpp
-	mkdir -p $(LOBJDIR)
+	mkdir -p "$(LOBJDIR)"
 	$(CC) -c $(CSTD) $< -o $@
 
 clean:
