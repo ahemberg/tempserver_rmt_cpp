@@ -1,1 +1,5 @@
 secrets
+.idea/
+CMakeLists.txt
+cmake-build-debug/
+read_temp
