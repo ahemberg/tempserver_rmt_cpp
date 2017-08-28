@@ -41,3 +41,6 @@ to build binary for updating and sending status.
 
 # TODO
 Documentation, configuration etc.
+
+# Remove this part
+I'm just playing around with git anyway.
