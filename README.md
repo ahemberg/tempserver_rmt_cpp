@@ -39,6 +39,20 @@ $ make -f makefile update_status
 ```
 to build binary for updating and sending status.
 
+# Make a secrets file
+In order for the program to work it needs to be  able to access your local mysql-database. The authenitcation information should be stored in a file called **secrets**. It should be located **<WHERE?>** and have the following format
+
+```
+{
+  "database_auth": {
+    "host": "<DB HOST>",
+    "user": "<DB USER>",
+    "password": "<YOUR DB-USERs PASSWORD>",
+    "database": "<DB NAME>"
+  }
+}
+```
+
 # TODO
 Documentation, configuration etc.
 
