@@ -19,6 +19,7 @@ Or if you are using debian you can just issue:
 $ sudo apt-get install libmysqlcppconn7
 ```
 also install  install libcurl4-openssl-dev
+and apt-get install libmysqlcppconn-dev
 
 Clone the repo ~duh
 
