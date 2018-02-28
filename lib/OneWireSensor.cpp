@@ -37,7 +37,7 @@ void OneWireSensor::read_temp(std::string sensor_path_str, std::string sensor_sn
     const char *path = sensor_path_str.c_str();
     char sensor_path[128];
     char buf[256];
-    char tmpData[6];
+    char tmpData[7];
 
     char *sensor_sn = new char[sensor_sn_str.size()+1];
     copy(sensor_sn_str.begin(), sensor_sn_str.end(), sensor_sn);
@@ -55,8 +55,8 @@ void OneWireSensor::read_temp(std::string sensor_path_str, std::string sensor_sn
         sensor_temp = 999;
     } else {
         while (read(fd, buf, 256) > 0) {
-            strncpy(tmpData, strstr(buf, "t=")+2, 5);
-            tmpData[5] = '\0'; //Make sure string is null terminated
+            strncpy(tmpData, strstr(buf, "t=")+2, 6);
+            tmpData[6] = '\0'; //Make sure string is null terminated
             sensor_temp = strtod(tmpData, NULL)/1000;
         }
     }
