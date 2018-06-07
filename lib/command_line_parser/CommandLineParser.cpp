@@ -21,7 +21,7 @@ void CommandLineParser::show_usage_rt(std::string name) {
 
 bool CommandLineParser::parse_cl_opt_rt(int c, char **v) {
   int opt;
-  while ((opt = getopt(c, v, "s:v:h:q")) != -1) {
+  while ((opt = getopt(c, v, "s:hvq")) != -1) {
     switch (opt) {
       case 'h':
         show_usage_rt(v[0]);

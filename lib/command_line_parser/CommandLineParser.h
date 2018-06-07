@@ -12,7 +12,7 @@
 #include <cstring>
 
 class CommandLineParser {
-private:
+public:
   struct info_messages {
     const std::string reading_rem_info = "Reading remote info from database...",
           reading_sensor               = "Reading sensor...",
