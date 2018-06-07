@@ -4,17 +4,16 @@
 
 // TODO: A class of this?
 
-#ifndef TEMPSERVER_RMT_CPP_DBFUNCTIONS_H
-#define TEMPSERVER_RMT_CPP_DBFUNCTIONS_H
-
-#include "json.hpp"
+#pragma once
 
 //Dependencies
 #include <fstream>
 #include <iostream>
-#include <string.h>
+#include <string>
 #include <vector>
 #include <time.h>
+
+#include "../nlohmann_json/json.hpp"
 
 //MySQL Includes
 #include <cppconn/driver.h>
@@ -26,7 +25,7 @@
 #include <cppconn/prepared_statement.h>
 
 //Misc
-#include "structs.h"
+#include "../structs.h"
 
 bool load_db_param(db_auth *params);
 std::string sql_timestamp();
@@ -37,5 +36,3 @@ bool remove_temps(db_auth auth, std::vector<saved_temp> temps_to_remove);
 bool save_status_message(board_parameters *board_param, db_auth *auth);
 std::vector<board_parameters> get_saved_status_messages(db_auth *auth);
 bool remove_status_messages(db_auth *auth, board_vector measurements_to_remove);
-
-#endif //TEMPSERVER_RMT_CPP_DBFUNCTIONS_H

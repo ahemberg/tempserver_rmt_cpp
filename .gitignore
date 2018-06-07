@@ -1,5 +1,6 @@
 secrets
 .idea/
-CMakeLists.txt
-cmake-build-debug/
 read_temp
+.ftpconfig
+*.gch
+*.o
